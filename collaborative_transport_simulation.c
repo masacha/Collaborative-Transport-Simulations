@@ -1,7 +1,20 @@
 #include <stdio.h>
 #include <math.h>
 
-
+#define	T	10
+#define ST	0.0001
+#define GDIS	500.0
+#define K_c
+#define D_c
+#define M_c
+#define K_f
+#define K_o
+#define D_o
+#define M_o
+#define L_o
+#define R_w
+#define K_tn
+#define J_n
 
 int main(void)
 {
@@ -107,11 +120,28 @@ int main(void)
 		x_command = 0.0;
 		dx_command = 0.0;
 		f_command = 3.0;
-
-		tau_dis_push_l = ;
-		tau_dis_push_r = ;
-		tau_dis_pull_l = ;
-		tau_dis_pull_r = ;
+		
+		
+		if(x_res_push>=x_o-L_o){
+			f_dis_push = K_o*(x_res_push-(x_o-L_o)) + D_o*(dx_res_push-dx_o);
+			tau_dis_push_l = f_dis_push/2;
+			tau_dis_push_r = f_dis_push/2;
+		}
+		else{
+			f_dis_push = 0.0;
+			tau_dis_push_l = 0.0;
+			tau_dis_push_r = 0.0;
+		}
+		if(x_res_pull<=x_o+L_o){
+			f_dis_pull = (K_o*(x_res_pull-(x_o+L_o)) + D_o*(dx_res_pull-dx_o))/2;
+			tau_dis_pull_l = f_dis_pull/2;
+			tau_dis_pull_r =  f_dis_pull/2;
+		}
+		else{
+			f_dis_pull = 0.0;
+			tau_dis_pull_l = 0.0;
+			tau_dis_pull_r = 0.0;
+		}
 		
 		/*Mobile Robot Controller*/
 		err_x_push = x_command - x_res_push;
@@ -132,20 +162,20 @@ int main(void)
 		ddtheta_ref_pull_l = ddx_ref_pull/R_w;
 		ddtheta_ref_pull_r = ddx_ref_pull/R_w;
 
-		ia_ref_push_l = Jn_push_l*ddtheta_ref_push_l/K_tn;
-		ia_ref_push_r = Jn_push_r*ddtheta_ref_push_r/K_tn;
-		ia_ref_pull_l = Jn_pull_l*ddtheta_ref_pull_l/K_tn;
-		ia_ref_pull_r = Jn_pull_r*ddtheta_ref_pull_r/K_tn;
+		ia_ref_push_l = J_n*ddtheta_ref_push_l/K_tn;
+		ia_ref_push_r = J_n*ddtheta_ref_push_r/K_tn;
+		ia_ref_pull_l = J_n*ddtheta_ref_pull_l/K_tn;
+		ia_ref_pull_r = J_n*ddtheta_ref_pull_r/K_tn;
 
 		ia_push_l = ia_ref_push_l + tau_dob_push_l/K_tn;
 		ia_push_r = ia_ref_push_r + tau_dob_push_r/K_tn;
 		ia_pull_l = ia_ref_pull_l + tau_dob_pull_l/K_tn;
 		ia_pull_r = ia_ref_pull_r + tau_dob_pull_r/K_tn;
 
-		ddtheta_res_push_l = (K_tn*ia_push_l - tau_dis_push_l)/Jn_push_l;
-		ddtheta_res_push_r = (K_tn*ia_push_r - tau_dis_push_r)/Jn_push_r;
-		ddtheta_res_pull_l = (K_tn*ia_pull_l - tau_dis_pull_l)/Jn_pull_l;
-		ddtheta_res_pull_r = (K_tn*ia_pull_r - tau_dis_pull_r)/Jn_pull_r;
+		ddtheta_res_push_l = (K_tn*ia_push_l - tau_dis_push_l)/J_n;
+		ddtheta_res_push_r = (K_tn*ia_push_r - tau_dis_push_r)/J_n;
+		ddtheta_res_pull_l = (K_tn*ia_pull_l - tau_dis_pull_l)/J_n;
+		ddtheta_res_pull_r = (K_tn*ia_pull_r - tau_dis_pull_r)/J_n;
 
 		dtheta_res_push_l += ddtheta_res_push_l * ST;
 		dtheta_res_push_r += ddtheta_res_push_r * ST;
@@ -158,26 +188,32 @@ int main(void)
 		theta_res_pull_r += dtheta_res_pull_r * ST;
 
 		/*disturbance observer*/		
-		tau_dob_push_l = integral_dob_push_l - dtheta_res_push_l*Jn_push_l*GDIS;
+		tau_dob_push_l = integral_dob_push_l - dtheta_res_push_l*J_n*GDIS;
 		integral_dob_push_l 
-			+= ((K_tn*ia_push_l + dtheta_res_push_l*Jn_push_l*GDIS) - integral_dob_push_l)*GDIS*ST;
+			+= ((K_tn*ia_push_l + dtheta_res_push_l*J_n*GDIS) - integral_dob_push_l)*GDIS*ST;
 		
-		tau_dob_push_r = integral_dob_push_r - dtheta_res_push_r*Jn_push_r*GDIS;
+		tau_dob_push_r = integral_dob_push_r - dtheta_res_push_r*J_n*GDIS;
 		integral_dob_push_r 
-			+= ((K_tn*ia_push_r + dtheta_res_push_r*Jn_push_r*GDIS) - integral_dob_push_r)*GDIS*ST;
+			+= ((K_tn*ia_push_r + dtheta_res_push_r*J_n*GDIS) - integral_dob_push_r)*GDIS*ST;
 
-		tau_dob_pull_l = integral_dob_pull_l - dtheta_res_pull_l*Jn_pull_l*GDIS;
+		tau_dob_pull_l = integral_dob_pull_l - dtheta_res_pull_l*J_n*GDIS;
 		integral_dob_pull_l 
-			+= ((K_tn*ia_pull_l + dtheta_res_pull_l*Jn_pull_l*GDIS) - integral_dob_pull_l)*GDIS*ST;
+			+= ((K_tn*ia_pull_l + dtheta_res_pull_l*J_n*GDIS) - integral_dob_pull_l)*GDIS*ST;
 		
-		tau_dob_pull_r = integral_dob_pull_r - dtheta_res_pull_r*Jn_pull_r*GDIS;
+		tau_dob_pull_r = integral_dob_pull_r - dtheta_res_pull_r*J_n*GDIS;
 		integral_dob_pull_r 
-			+= ((K_tn*ia_pull_r + dtheta_res_pull_r*Jn_pull_r*GDIS) - integral_dob_pull_r)*GDIS*ST;
+			+= ((K_tn*ia_pull_r + dtheta_res_pull_r*J_n*GDIS) - integral_dob_pull_r)*GDIS*ST;
 
 		/*Mobile Robot Reaction Force*/
 
 		f_res_push = R_w*(ddtheta_res_push_l+ddtheta_res_push_r)/2 + (tau_dob_push_l+tau_dob_push_r)/R_w; /*Ajouter des termes de friction (sol, air)*/
 		f_res_pull = R_w*(ddtheta_res_pull_l+ddtheta_res_pull_r)/2 + (tau_dob_pull_l+tau_dob_pull_r)/R_w;
+
+		/*Object Motion*/
+
+		ddx_o = (f_dis_push+f_dis_pull)/M_o;
+		dx_o += ddx_o*ST;
+		x_o += dx_o*ST;
 
 		fprintf(fp, "%lf %lf %lf %lf %lf\n", t, x_res_push, x_res_pull, f_res_push, f_res_pull);
 		
