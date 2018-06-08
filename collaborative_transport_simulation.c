@@ -4,8 +4,8 @@
 #define	T	10 //seconds
 #define ST	0.0001 //second
 #define GDIS	500.0
-#define K_c	0.1
-#define D_c	0.001
+#define K_p	100.0
+#define K_v	1.0
 #define M_c	1.0
 #define K_f	10.0
 #define K_o	1000.0 //N/m
@@ -13,8 +13,8 @@
 #define M_o	0.5 //kg
 #define L_o	0.100 //meter
 #define R_w	0.030 //meter
-#define K_tn	1.6   //Nm
-#define J_n	0.001 //Ns^2/m
+#define K_tn	1.7   //Nm
+#define J_n	0.1 //Ns^2/m
 
 int main(void)
 {
@@ -128,13 +128,13 @@ int main(void)
 
 		x_command = 0.0;
 		dx_command = 0.0;
-		f_command = 3.0;
+		f_command = 5.0;
 		
 		
 		if(x_res_push>=x_o-L_o){
 			f_dis_push = K_o*(x_res_push-(x_o-L_o)) + D_o*(dx_res_push-dx_o);
-			tau_dis_push_l = f_dis_push/2;
-			tau_dis_push_r = f_dis_push/2;
+			tau_dis_push_l = f_dis_push*R_w/2;
+			tau_dis_push_r = f_dis_push*R_w/2;
 		}
 		else{
 			f_dis_push = 0.0;
@@ -142,9 +142,9 @@ int main(void)
 			tau_dis_push_r = 0.0;
 		}
 		if(x_res_pull<=x_o+L_o){
-			f_dis_pull = (K_o*(x_res_pull-(x_o+L_o)) + D_o*(dx_res_pull-dx_o))/2;
-			tau_dis_pull_l = f_dis_pull/2;
-			tau_dis_pull_r =  f_dis_pull/2;
+			f_dis_pull = K_o*(x_res_pull-(x_o+L_o)) + D_o*(dx_res_pull-dx_o);
+			tau_dis_pull_l = f_dis_pull*R_w/2;
+			tau_dis_pull_r =  f_dis_pull*R_w/2;
 		}
 		else{
 			f_dis_pull = 0.0;
@@ -154,15 +154,15 @@ int main(void)
 		
 		/*Mobile Robot Controller*/
 		err_x_push = x_command - x_res_push;
-		err_x_push = x_command - x_res_pull;
+		err_x_pull = x_command - x_res_pull;
 		derr_x_push = dx_command - dx_res_push;
 		derr_x_pull = dx_command - dx_res_pull;
 
-		ddx_comp_push = (K_c*err_x_push+D_c*derr_x_push)/M_c;
-		ddx_comp_pull = (K_c*err_x_pull+D_c*derr_x_pull)/M_c;
+		ddx_comp_push = (K_p*err_x_push+K_v*derr_x_push)/M_c;
+		ddx_comp_pull = (K_p*err_x_pull+K_v*derr_x_pull)/M_c;
 
-		ddx_ref_push = K_f*(f_command-f_dis_push)/M_o;
-		ddx_ref_pull = K_f*(-f_command-f_dis_pull)/M_o;
+		ddx_ref_push = K_f*(f_command-f_dis_push)/M_o; //+ ddx_comp_push;
+		ddx_ref_pull = K_f*(-f_command-f_dis_pull)/M_o; //+ ddx_comp_pull;
 
 		/*Motor Controller*/
 
