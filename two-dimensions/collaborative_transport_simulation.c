@@ -142,17 +142,17 @@ int main(void)
 		/*Changer f_dis pour ajouter l'orientation*/
 		
 		if(x_res_push>=x_o-L_o){
-			f_dis_push = K_o*(x_res_push-(x_o-L_o)) + D_o*(dx_res_push-dx_o);
-			tau_dis_push_l = f_dis_push*R_w/2;
+			f_dis_push = K_o*(x_res_push-(x_o-L_o)) + D_o*(dx_res_push-dx_o); //A modifier par une sorte d'integrale
+			tau_dis_push_l = f_dis_push*R_w/2; //pas aussi simple
 			tau_dis_push_r = f_dis_push*R_w/2;
 		}
 		else{
-			f_dis_push = 0.0;
+			f_dis_push = 0.0; //pas aussi simple malheureusement
 			tau_dis_push_l = 0.0;
 			tau_dis_push_r = 0.0;
 		}
 		if(x_res_pull<=x_o+L_o){
-			f_dis_pull = K_o*(x_res_pull-(x_o+L_o)) + D_o*(dx_res_pull-dx_o);
+			f_dis_pull = K_o*(x_res_pull-(x_o+L_o)) + D_o*(dx_res_pull-dx_o); //a modifier par une sorte d'integrale
 			tau_dis_pull_l = f_dis_pull*R_w/2;
 			tau_dis_pull_r =  f_dis_pull*R_w/2;
 		}
@@ -163,6 +163,8 @@ int main(void)
 		}
 		
 		/*Mobile Robot Controller*/
+
+		//Quelle force ??
 		err_x_push = x_command - L_o - x_res_push;
 		err_x_pull = x_command + L_o - x_res_pull;
 		derr_x_push = dx_command - dx_res_push;
@@ -230,13 +232,13 @@ int main(void)
 
 		/*Object Motion*/
 
-		ddx_o = (f_dis_push+f_dis_pull)*cos(theta_o)/M_o;
+		ddx_o = (f_dis_push+f_dis_pull)*cos(theta_o)/M_o; //A verifier!! (f_dis est la sorte d'integrale)
 		dx_o += ddx_o*ST;
 		x_o += dx_o*ST;
-		ddy_o = (f_dis_push+f_dis_pull)*sin(theta_o)/M_o;
+		ddy_o = (f_dis_push+f_dis_pull)*sin(theta_o)/M_o; //A verifier!!
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
-		ddphi_o = /J_o; //moment des forces divise par inertie
+		ddphi_o = /J_o; //moment des forces divise par inertie (il faut encore faire la sorte d'integrale)
 		dphi_o += ddphi_o*ST;
 		phi_o += dphi_o*ST;
 
@@ -261,6 +263,8 @@ int main(void)
 
 		f_res_push = (tau_dob_push_l+tau_dob_push_r)/R_w;
 		f_res_pull = (tau_dob_pull_l+tau_dob_pull_r)/R_w;
+		tau_res_push = (tau_dob_push_l-tau_dob_push_r)*W_r/(2*R_w);
+		tau_res_pull = (tau_dob_pull_l-tau_dob_pull_r)*W_r/(2*R_w);
 
 		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_res_push, x_res_pull, x_o, f_dis_push, f_dis_pull, f_res_push, f_res_pull);
 		
