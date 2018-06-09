@@ -164,7 +164,6 @@ int main(void)
 		
 		/*Mobile Robot Controller*/
 
-		//Quelle force ??
 		err_x_push = x_command - L_o - x_res_push;
 		err_x_pull = x_command + L_o - x_res_pull;
 		derr_x_push = dx_command - dx_res_push;
