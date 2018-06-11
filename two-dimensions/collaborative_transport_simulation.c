@@ -26,7 +26,9 @@ int main(void)
 /*Reference Commands*/
 
 	double x_command = 0.0; //Ne pas modifier
+	double y_command = 0.0;
 	double dx_command = 0.0; //Ne pas modifier
+	double dy_command = 0.0;
 	double f_command = 0.0; //Ne pas modifier
 
 /*Mobile Robot Outputs*/
@@ -34,7 +36,10 @@ int main(void)
 	double x_res_push = -0.2;
 	double dx_res_push = 0.0;
 	double ddx_res_push = 0.0;
-	double phi_res_push = 0.0;
+	double y_res_push = -1.5;
+	double dy_res_push = 0.0;
+	double ddy_res_push = 0.0;
+	double phi_res_push = Pi/2;
 	double dphi_res_push = 0.0;
 	double ddphi_res_push = 0.0;
 
@@ -47,6 +52,8 @@ int main(void)
 
 	double err_x_push = 0.0;
 	double derr_x_push = 0.0;
+	double err_y_push = 0.0;
+	double derr_y_push = 0.0;
 
 	double f_res_push = 0.0;
 	double tau_res_push = 0.0;
@@ -58,6 +65,8 @@ int main(void)
 
 	double ddx_ref_push = 0.0;
 	double ddy_ref_push = 0.0;
+
+	double ddphi_ref_push = 0.0;
 
 	double f_dis_push = 0.0;
 
@@ -107,7 +116,7 @@ int main(void)
 	double ddtheta_res_push_l = 0.0;
 	double ddtheta_res_push_r = 0.0;
 
-	l_push_prev = abs(-sin(phi_o)*x_c_push+cos(phi_o)*y_c_push - (y_o-L_o));
+	l_push_prev = fabs(-sin(phi_o)*x_c_push+cos(phi_o)*y_c_push - (y_o-L_o));
 
 	FILE *fp;
 
@@ -118,9 +127,11 @@ int main(void)
 
 	while(t <= T){	
 
-		x_command = 2.0;
-		dx_command = 0;
-		f_command = 5.0;
+		x_command = -0.2;
+		dx_command = 0.0;
+		y_command = 0.0;
+		dy_command = 0.0;
+		f_command = 0.0;
 		
 		x_c_push = cos(phi_o)*x_res_push-sin(phi_o)*(y_res_push+R_r);
 		y_c_push = sin(phi_o)*x_res_push+cos(phi_o)*(y_res_push+R_r);
@@ -173,11 +184,11 @@ int main(void)
 		theta_res_push_r += dtheta_res_push_r * ST;
 
 		/*Robot Motion*/
-		ddx_res_push = -R_w*(ddtheta_res_push_l+ddtheta_res_push_r)*sin(phi_res_push)/2;
+		ddx_res_push = R_w*(ddtheta_res_push_l+ddtheta_res_push_r)*cos(phi_res_push)/2;
 		dx_res_push += ddx_res_push*ST;
 		x_res_push += dx_res_push*ST;
 
-		ddy_res_push = R_w*(ddtheta_res_push_l+ddtheta_res_push_r)*cos(phi_res_push)/2;
+		ddy_res_push = R_w*(ddtheta_res_push_l+ddtheta_res_push_r)*sin(phi_res_push)/2;
 		dy_res_push += ddy_res_push*ST;
 		y_res_push += dy_res_push*ST;
 
@@ -187,17 +198,17 @@ int main(void)
 
 		/*Object Motion*/
 
-		ddx_o = -(f_dis_push)*sin(phi_r)/M_o;
+		ddx_o = (f_dis_push)*cos(phi_res_push)/M_o;
 		dx_o += ddx_o*ST;
 		x_o += dx_o*ST;
-		ddy_o = (f_dis_push)*cos(phi_r)/M_o;
+		ddy_o = (f_dis_push)*sin(phi_res_push)/M_o;
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
-		ddphi_o = -F_dis_push*(cos(phi_res_push)*(x_o-x_c_push)+sin(phi_res_push)*(y_o-y_c_push))/J_o;
+		ddphi_o = -f_dis_push*(cos(phi_res_push)*(x_o-x_c_push)+sin(phi_res_push)*(y_o-y_c_push))/J_o;
 		dphi_o += ddphi_o*ST;
 		phi_o += dphi_o*ST;
 
-		l_push = abs(-sin(phi_o)*x_c_push+cos(phi_o)*y_c_push - (y_o-L_o));
+		l_push = fabs(-sin(phi_o)*x_c_push+cos(phi_o)*y_c_push - (y_o-L_o));
 		dl_push = (l_push - l_push_prev)/ST;
 		l_push_prev = l_push;
 
