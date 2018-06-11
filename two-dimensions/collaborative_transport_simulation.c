@@ -149,10 +149,10 @@ int main(void)
 		
 		/*Mobile Robot Controller*/
 
-		err_x_bottom = x_bottom_command - L_o - x_res_bottom;
+		err_x_bottom = x_bottom_command - x_res_bottom;
 		derr_x_bottom = dx_bottom_command - dx_res_bottom;
 
-		err_y_bottom = y_bottom_command - L_o - y_res_bottom;
+		err_y_bottom = y_bottom_command - y_res_bottom;
 		derr_y_bottom = dy_bottom_command - dy_res_bottom;
 
 		ddx_comp_bottom = (K_p*err_x_bottom+K_v*derr_x_bottom)/M_c;
