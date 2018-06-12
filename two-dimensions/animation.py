@@ -25,29 +25,29 @@ def init():
     return bottom,rectangle,
 
 def animate(i):
-    xtopleft = np.cos(data[i][6])*(data[i][4]-1.0)-np.sin(data[i][6])*(data[i][5]+1.0)
-    ytopleft = np.sin(data[i][6])*(data[i][4]-1.0)+np.cos(data[i][6])*(data[i][5]+1.0)
-    xtopright = np.cos(data[i][6])*(data[i][4]+1.0)-np.sin(data[i][6])*(data[i][5]+1.0)
-    ytopright = np.sin(data[i][6])*(data[i][4]+1.0)+np.cos(data[i][6])*(data[i][5]+1.0)
-    xbottomright = np.cos(data[i][6])*(data[i][4]+1.0)-np.sin(data[i][6])*(data[i][5]-1.0)
-    ybottomright = np.sin(data[i][6])*(data[i][4]+1.0)+np.cos(data[i][6])*(data[i][5]-1.0)
-    xbottomleft = np.cos(data[i][6])*(data[i][4]-1.0)-np.sin(data[i][6])*(data[i][5]-1.0)
-    ybottomleft = np.sin(data[i][6])*(data[i][4]-1.0)+np.cos(data[i][6])*(data[i][5]-1.0)
+    xtopleft = np.cos(data[1000*i][6])*(data[1000*i][4]-1.0)-np.sin(data[1000*i][6])*(data[1000*i][5]+1.0)
+    ytopleft = np.sin(data[1000*i][6])*(data[1000*i][4]-1.0)+np.cos(data[1000*i][6])*(data[1000*i][5]+1.0)
+    xtopright = np.cos(data[1000*i][6])*(data[1000*i][4]+1.0)-np.sin(data[1000*i][6])*(data[1000*i][5]+1.0)
+    ytopright = np.sin(data[1000*i][6])*(data[1000*i][4]+1.0)+np.cos(data[1000*i][6])*(data[1000*i][5]+1.0)
+    xbottomright = np.cos(data[1000*i][6])*(data[1000*i][4]+1.0)-np.sin(data[1000*i][6])*(data[1000*i][5]-1.0)
+    ybottomright = np.sin(data[1000*i][6])*(data[1000*i][4]+1.0)+np.cos(data[1000*i][6])*(data[1000*i][5]-1.0)
+    xbottomleft = np.cos(data[1000*i][6])*(data[1000*i][4]-1.0)-np.sin(data[1000*i][6])*(data[1000*i][5]-1.0)
+    ybottomleft = np.sin(data[1000*i][6])*(data[1000*i][4]-1.0)+np.cos(data[1000*i][6])*(data[1000*i][5]-1.0)
     objectpoints = [[xtopleft,ytopleft],[xtopright,ytopright],[xbottomright,ybottomright],[xbottomleft,ybottomleft]]
     rectangle = plt.Polygon(objectpoints, closed=True, fc='b')
     ax.add_patch(rectangle)
-    bottom.center = (data[i][1], data[i][2])
+    bottom.center = (data[1000*i][1], data[1000*i][2])
     return bottom,rectangle,
 
 anim = animation.FuncAnimation(fig, animate, 
                                init_func=init, 
-                               frames=100000, 
-                               interval=0.0001,
+                               frames=100, 
+                               interval=100.0,
                                blit=True)
 
 plt.show()
 
-anim.save('animation.mp4', fps=30, 
-          extra_args=['-vcodec', 'h264', 
-                      '-pix_fmt', 'yuv420p'])
+#Writer = animation.writers['ffmpeg']
+#writer = Writer(fps=10)
+#anim.save('animation.mp4', writer=writer)
 

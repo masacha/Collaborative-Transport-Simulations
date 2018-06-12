@@ -18,6 +18,7 @@
 #define K_tn	1.7   //Nm
 #define J_n	0.1 //Ns^2/m
 #define Pi	3.1415
+#define D_f	10.0
 
 int main(void)
 {
@@ -198,13 +199,13 @@ int main(void)
 
 		/*Object Motion*/
 
-		ddx_o = (f_dis_bottom)*cos(phi_res_bottom)/M_o;
+		ddx_o = (f_dis_bottom)*cos(phi_res_bottom)/M_o - D_f*dx_o;
 		dx_o += ddx_o*ST;
 		x_o += dx_o*ST;
-		ddy_o = (f_dis_bottom)*sin(phi_res_bottom)/M_o;
+		ddy_o = (f_dis_bottom)*sin(phi_res_bottom)/M_o - D_f*dy_o;
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
-		ddphi_o = -f_dis_bottom*(cos(phi_res_bottom)*(x_o-x_c_bottom)+sin(phi_res_bottom)*(y_o-y_c_bottom))/J_o;
+		ddphi_o = -f_dis_bottom*(cos(phi_res_bottom)*(x_o-x_c_bottom)+sin(phi_res_bottom)*(y_o-y_c_bottom))/J_o - D_f*dphi_o;
 		dphi_o += ddphi_o*ST;
 		phi_o += dphi_o*ST;
 
@@ -212,7 +213,7 @@ int main(void)
 		dl_bottom = (l_bottom - l_bottom_prev)/ST;
 		l_bottom_prev = l_bottom;
 
-		/*disturbance observer*/		
+		/*disturbance observer*/	
 		tau_dob_bottom_l = integral_tau_dob_bottom_l - dtheta_res_bottom_l*J_n*GDIS;
 		integral_tau_dob_bottom_l 
 			+= ((K_tn*ia_bottom_l + dtheta_res_bottom_l*J_n*GDIS) - integral_tau_dob_bottom_l)*GDIS*ST;
