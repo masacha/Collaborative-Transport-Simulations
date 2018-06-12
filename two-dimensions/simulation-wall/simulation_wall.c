@@ -142,10 +142,10 @@ int main(void)
 		dy_bottom_command = 0.0;
 		phi_bottom_command = 0.0;
 
-		f_bottom_command = 10;
+		f_bottom_command = 50;
 		
-		x_c_bottom = cos(phi_o)*x_res_bottom-sin(phi_o)*(y_res_bottom+R_r);
-		y_c_bottom = sin(phi_o)*x_res_bottom+cos(phi_o)*(y_res_bottom+R_r);
+		x_c_bottom = x_res_bottom + cos(phi_o)*0.0-sin(phi_o)*(R_r);
+		y_c_bottom = y_res_bottom+ sin(phi_o)*0.0+cos(phi_o)*(R_r);
 
 		if(cos(phi_o)*y_c_bottom-sin(phi_o)*x_c_bottom>y_o-L_o){
 			f_dis_bottom = K_o*l_bottom + D_o*dl_bottom; 
@@ -215,13 +215,13 @@ int main(void)
 		else{
 			reaction_wall = 0.0;
 		}
-		ddx_o = (f_dis_bottom)*cos(phi_res_bottom)/M_o - D_f*dx_o + sin(phi_o)*reaction_wall;
+		ddx_o = (f_dis_bottom)*sin(phi_o)/M_o - D_f*dx_o + sin(phi_o)*reaction_wall;
 		dx_o += ddx_o*ST;
 		x_o += dx_o*ST;
-		ddy_o = (f_dis_bottom)*sin(phi_res_bottom)/M_o - D_f*dy_o - cos(phi_o)*reaction_wall;
+		ddy_o = (f_dis_bottom)*cos(phi_o)/M_o - D_f*dy_o - cos(phi_o)*reaction_wall;
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
-		ddphi_o = -f_dis_bottom*(cos(phi_res_bottom)*(x_o-x_c_bottom)+sin(phi_res_bottom)*(y_o-y_c_bottom))/J_o - D_f_rotation*dphi_o 
+		ddphi_o = -f_dis_bottom*(cos(phi_o)*(x_o-x_c_bottom)+sin(phi_o)*(y_o-y_c_bottom))/J_o - D_f_rotation*dphi_o 
 			+ reaction_wall*(cos(phi_o)*(x_o-0.0)+sin(phi_o)*(y_o-1.0));
 		dphi_o += ddphi_o*ST;
 		phi_o += dphi_o*ST;
