@@ -10,8 +10,8 @@
 #define K_f	1.0
 #define K_o	1000.0 //N/m
 #define D_o	1.0
-#define M_o	0.5 //kg
-#define J_o	1.0
+#define M_o	3.0 //kg
+#define J_o	2.0
 #define L_o	1.000 //meter
 #define R_w	0.030 //meter
 #define R_r	0.10 //meter
@@ -24,6 +24,7 @@
 int main(void)
 {
 	double t = 0.0;
+	int firstRound = 1;
 
 /*Reference Commands*/
 
@@ -36,10 +37,10 @@ int main(void)
 
 /*Mobile Robot Outputs*/
 
-	double x_res_bottom = -0.2;
+	double x_res_bottom = -0.8;
 	double dx_res_bottom = 0.0;
 	double ddx_res_bottom = 0.0;
-	double y_res_bottom = -1.5;
+	double y_res_bottom = -1.1;
 	double dy_res_bottom = 0.0;
 	double ddy_res_bottom = 0.0;
 	double phi_res_bottom = Pi/2;
@@ -84,6 +85,9 @@ int main(void)
 	double dphi_o = 0.0;
 	double ddphi_o = 0.0;
 
+	double x_wall = 0.5;
+	double y_wall = 1.0;
+
 	double reaction_wall = 0.0;
 	double l_wall = 0.0;
 	double dl_wall = 0.0;
@@ -123,9 +127,6 @@ int main(void)
 
 	double ddtheta_res_bottom_l = 0.0;
 	double ddtheta_res_bottom_r = 0.0;
-
-	l_bottom_prev = fabs(cos(phi_o)*(y_c_bottom-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_bottom-x_o-sin(phi_o)*L_o));
-	l_wall_prev = fabs(cos(phi_o)*(1.0-y_o-cos(phi_o)*L_o)-sin(phi_o)*(0.0-x_o+sin(phi_o)*L_o));
 
 	FILE *fp;
 
@@ -222,16 +223,26 @@ int main(void)
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
 		ddphi_o = -f_dis_bottom*(cos(phi_res_bottom)*(x_o-x_c_bottom)+sin(phi_res_bottom)*(y_o-y_c_bottom))/J_o - D_f_rotation*dphi_o 
-			+ reaction_wall*(cos(phi_o)*(x_o-0.0)+sin(phi_o)*(y_o-1.0));
+			+ reaction_wall*(cos(phi_o)*(x_o-x_wall)+sin(phi_o)*(y_o-y_wall));
 		dphi_o += ddphi_o*ST;
 		phi_o += dphi_o*ST;
 
 		l_bottom =fabs(cos(phi_o)*(y_c_bottom-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_bottom-x_o-sin(phi_o)*L_o));
-		dl_bottom = (l_bottom - l_bottom_prev)/ST;
+		if (firstRound==1){
+			dl_bottom = 0.0;
+		}
+		else{
+			dl_bottom = (l_bottom - l_bottom_prev)/ST;
+		}
 		l_bottom_prev = l_bottom;
 
-		l_wall = fabs(cos(phi_o)*(1.0-y_o-cos(phi_o)*L_o)-sin(phi_o)*(0.0-x_o+sin(phi_o)*L_o));
-		dl_wall = (l_wall-l_wall_prev)/ST;
+		l_wall = fabs(cos(phi_o)*(y_wall-y_o-cos(phi_o)*L_o)-sin(phi_o)*(x_wall-x_o+sin(phi_o)*L_o));
+		if (firstRound==1){
+			dl_wall = 0.0;
+		}
+		else{
+			dl_wall = (l_wall - l_wall_prev)/ST;
+		}
 		l_wall_prev = l_wall;
 
 		/*disturbance observer*/	
@@ -248,9 +259,10 @@ int main(void)
 		f_res_bottom = (tau_dob_bottom_l+tau_dob_bottom_r)/R_w;
 		tau_res_bottom = (tau_dob_bottom_l-tau_dob_bottom_r)*R_r/(R_w);
 
-		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf \n", t, x_res_bottom, y_res_bottom, phi_res_bottom, x_o, y_o, phi_o, f_dis_bottom, f_res_bottom, tau_res_bottom, x_c_bottom, y_c_bottom);
+		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_res_bottom, y_res_bottom, phi_res_bottom, x_o, y_o, phi_o, f_dis_bottom, f_res_bottom, tau_res_bottom, x_c_bottom, y_c_bottom, x_wall, y_wall);
 		
 		t += ST;
+		firstRound = 0;
       
 	}
 
