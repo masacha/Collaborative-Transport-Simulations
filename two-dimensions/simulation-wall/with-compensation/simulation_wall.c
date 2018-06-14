@@ -612,8 +612,8 @@ int main(void)
 		ia_left1_l = ia_ref_left1_l + tau_dob_left1_l/K_tn;
 		ia_left1_r = ia_ref_left1_r + tau_dob_left1_r/K_tn;
 
-		ddtheta_res_left1_l = (K_tn*ia_left1_l - tau_dis_left1_l)/J_n;
-		ddtheta_res_left1_r = (K_tn*ia_left1_r - tau_dis_left1_r)/J_n;
+		ddtheta_res_left1_l = (K_tn*ia_left1_l - tau_dis_left1_l)/J_n; //ajouter masse et inertie du robot ici
+		ddtheta_res_left1_r = (K_tn*ia_left1_r - tau_dis_left1_r)/J_n; //ajouter masse et inertie du robot ici
 
 		dtheta_res_left1_l += ddtheta_res_left1_l * ST;
 		dtheta_res_left1_r += ddtheta_res_left1_r * ST;
@@ -644,7 +644,7 @@ int main(void)
 		phi_left2_command = 0.0;
 
 		if (phi_o<0){
-			f_left2_command = -K_phi*(phi_o)-K_dphi*dphi_o-K_intphi*intphi_o;//(fabs(cos(phi_o)*(y_c_left2-y_o)-sin(phi_o)*(x_c_left2-x_o)));
+			f_left2_command = -K_phi*(phi_o)-K_dphi*dphi_o-K_intphi*intphi_o;
 		}
 		else{
 			f_left2_command = 0;
@@ -691,8 +691,8 @@ int main(void)
 		ia_left2_l = ia_ref_left2_l + tau_dob_left2_l/K_tn;
 		ia_left2_r = ia_ref_left2_r + tau_dob_left2_r/K_tn;
 
-		ddtheta_res_left2_l = (K_tn*ia_left2_l - tau_dis_left2_l)/J_n;
-		ddtheta_res_left2_r = (K_tn*ia_left2_r - tau_dis_left2_r)/J_n;
+		ddtheta_res_left2_l = (K_tn*ia_left2_l - tau_dis_left2_l)/J_n; //ajouter masse et inertie du robot ici
+		ddtheta_res_left2_r = (K_tn*ia_left2_r - tau_dis_left2_r)/J_n; //ajouter masse et inertie du robot ici
 
 		dtheta_res_left2_l += ddtheta_res_left2_l * ST;
 		dtheta_res_left2_r += ddtheta_res_left2_r * ST;
@@ -723,7 +723,7 @@ int main(void)
 		phi_right1_command = 0.0;
 
 		if (phi_o<0){
-			f_right1_command = - K_phi*(phi_o) - K_dphi*dphi_o-K_intphi*intphi_o;//(fabs(cos(phi_o)*(y_c_right1-y_o)-sin(phi_o)*(x_c_right1-x_o)));
+			f_right1_command = - K_phi*(phi_o) - K_dphi*dphi_o-K_intphi*intphi_o;
 		}
 		else{
 			f_right1_command = 0;
