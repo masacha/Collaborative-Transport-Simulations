@@ -245,21 +245,31 @@ int main(void)
 		}
 		l_wall_prev = l_wall;
 
-		/*disturbance observer*/	
-		tau_dob_bottom_l = integral_tau_dob_bottom_l - dtheta_res_bottom_l*J_n*GDIS;
-		integral_tau_dob_bottom_l 
-			+= ((K_tn*ia_bottom_l + dtheta_res_bottom_l*J_n*GDIS) - integral_tau_dob_bottom_l)*GDIS*ST;
+		/*disturbance observer*/
+		if(firstRound ==1){
+			tau_dob_bottom_l = 0;
+			integral_tau_dob_bottom_l += ((K_tn*ia_bottom_l + dtheta_res_bottom_l*J_n*GDIS) - integral_tau_dob_bottom_l)*GDIS*ST;
+		}
+		else{
+			tau_dob_bottom_l = integral_tau_dob_bottom_l - dtheta_res_bottom_l*J_n*GDIS;
+			integral_tau_dob_bottom_l += ((K_tn*ia_bottom_l + dtheta_res_bottom_l*J_n*GDIS) - integral_tau_dob_bottom_l)*GDIS*ST;
+		}
 		
-		tau_dob_bottom_r = integral_tau_dob_bottom_r - dtheta_res_bottom_r*J_n*GDIS;
-		integral_tau_dob_bottom_r 
-			+= ((K_tn*ia_bottom_r + dtheta_res_bottom_r*J_n*GDIS) - integral_tau_dob_bottom_r)*GDIS*ST;
+		if(firstRound ==1){
+			tau_dob_bottom_r = 0;
+			integral_tau_dob_bottom_r += ((K_tn*ia_bottom_r + dtheta_res_bottom_r*J_n*GDIS) - integral_tau_dob_bottom_r)*GDIS*ST;
+		}
+		else{
+			tau_dob_bottom_r = integral_tau_dob_bottom_r - dtheta_res_bottom_r*J_n*GDIS;
+			integral_tau_dob_bottom_r += ((K_tn*ia_bottom_r + dtheta_res_bottom_r*J_n*GDIS) - integral_tau_dob_bottom_r)*GDIS*ST;
+		}
 
 		/*Mobile Robot Reaction Force*/
 
 		f_res_bottom = (tau_dob_bottom_l+tau_dob_bottom_r)/R_w;
 		tau_res_bottom = (tau_dob_bottom_l-tau_dob_bottom_r)*R_r/(R_w);
 
-		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_res_bottom, y_res_bottom, phi_res_bottom, x_o, y_o, phi_o, f_dis_bottom, f_res_bottom, tau_res_bottom, x_c_bottom, y_c_bottom, x_wall, y_wall);
+		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_res_bottom, y_res_bottom, phi_res_bottom, x_o, y_o, phi_o, f_dis_bottom, f_res_bottom, tau_res_bottom, x_c_bottom, y_c_bottom, x_wall, y_wall, reaction_wall);
 		
 		t += ST;
 		firstRound = 0;

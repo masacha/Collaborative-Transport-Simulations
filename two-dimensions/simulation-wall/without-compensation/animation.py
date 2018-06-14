@@ -15,7 +15,7 @@ fig.set_size_inches(7, 7)
 
 ax = plt.axes(xlim=(-2, 2), ylim=(-2, 2))
 bottom = plt.Circle((5, -5), 0.1, fc='y', alpha=0.5)
-wall = plt.Circle((data[0][12], data[0][13]), 0.1, fc='black')
+wall = plt.Circle((data[0][12], data[0][13]), 0.05, fc='black')
 objectpoints = [[-1.0,1.0],[1.0,1.0],[1.0,-1.0],[-1.0,-1.0]]
 rectangle = plt.Polygon(objectpoints, closed=True, fc='b')
 bottomfront = plt.Circle((0, 0), 0.01, fc='black')
