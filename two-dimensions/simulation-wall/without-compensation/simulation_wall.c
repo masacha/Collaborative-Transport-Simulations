@@ -13,17 +13,20 @@
 #define M_o	3.0 //kg
 #define J_o	2.0
 #define L_o	1.000 //meter
-#define R_w	0.030 //meter
-#define R_r	0.10 //meter
+#define R_w	0.033 //meter
+#define R_r	0.08 //meter
 #define K_tn	1.7   //Nm
 #define J_n	0.1 //Ns^2/m
 #define Pi	3.1415
 #define D_f	50.0
 #define D_f_rotation	100
+#define M_r	1.0 //kg
+#define J_r	0.0032
+#define D_r	1.0
 
 int main(void)
 {
-	double t = 0.0;
+	double t = -2.0;
 	int firstRound = 1;
 
 /*Reference Commands*/
@@ -134,31 +137,28 @@ int main(void)
 		fprintf(stderr, "File open failed.\n");
 		return 1;
 	}
-
+	
 	while(t <= T){	
 
-		x_bottom_command = -0.2;
-		dx_bottom_command = 0.0;
-		y_bottom_command = 0.0;
-		dy_bottom_command = 0.0;
-		phi_bottom_command = 0.0;
+		if (t<0){
+			x_bottom_command = -0.2;
+			dx_bottom_command = 0.0;
+			y_bottom_command = 0.0;
+			dy_bottom_command = 0.0;
+			phi_bottom_command = 0.0;
 
-		f_bottom_command = 10;
-		
-		x_c_bottom = x_res_bottom + cos(phi_o)*0.0-sin(phi_o)*(R_r);
-		y_c_bottom = y_res_bottom+ sin(phi_o)*0.0+cos(phi_o)*(R_r);
-
-		if(cos(phi_o)*(y_c_bottom-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_bottom-x_o-sin(phi_o)*L_o)>0){
-			f_dis_bottom = K_o*l_bottom + D_o*dl_bottom; 
-			tau_dis_bottom_l = f_dis_bottom*R_w*(1-sin(phi_res_bottom-phi_o))/2;
-			tau_dis_bottom_r = f_dis_bottom*R_w*(1+sin(phi_res_bottom-phi_o))/2;
+			f_bottom_command = 0;
 		}
 		else{
-			f_dis_bottom = 0.0;
-			tau_dis_bottom_l = 0.0;
-			tau_dis_bottom_r = 0.0;
+			x_bottom_command = -0.2;
+			dx_bottom_command = 0.0;
+			y_bottom_command = 0.0;
+			dy_bottom_command = 0.0;
+			phi_bottom_command = 0.0;
+
+			f_bottom_command = 10;
 		}
-		
+
 		/*Mobile Robot Controller*/
 
 		err_x_bottom = x_bottom_command - x_res_bottom;
@@ -196,6 +196,21 @@ int main(void)
 		theta_res_bottom_r += dtheta_res_bottom_r * ST;
 
 		/*Robot Motion*/
+
+		x_c_bottom = x_res_bottom + cos(phi_o)*0.0-sin(phi_o)*(R_r);
+		y_c_bottom = y_res_bottom+ sin(phi_o)*0.0+cos(phi_o)*(R_r);
+
+		if(cos(phi_o)*(y_c_bottom-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_bottom-x_o-sin(phi_o)*L_o)>0){
+			f_dis_bottom = K_o*l_bottom + D_o*dl_bottom; 
+			tau_dis_bottom_l = f_dis_bottom*R_w*(1-sin(phi_res_bottom-phi_o))/2 + (R_w*R_w/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_bottom_r+(M_r*R_r*R_r-J_r)*ddtheta_res_bottom_l);//+D_r*dtheta_res_bottom_l;
+			tau_dis_bottom_r = f_dis_bottom*R_w*(1+sin(phi_res_bottom-phi_o))/2 + (R_w*R_w/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_bottom_r+(M_r*R_r*R_r+J_r)*ddtheta_res_bottom_l);//+D_r*dtheta_res_bottom_r;
+		}
+		else{
+			f_dis_bottom = 0.0;
+			tau_dis_bottom_l = 0.0;
+			tau_dis_bottom_r = 0.0;
+		}
+	
 		ddx_res_bottom = R_w*(ddtheta_res_bottom_l+ddtheta_res_bottom_r)*cos(phi_res_bottom)/2;
 		dx_res_bottom += ddx_res_bottom*ST;
 		x_res_bottom += dx_res_bottom*ST;
@@ -246,23 +261,11 @@ int main(void)
 		l_wall_prev = l_wall;
 
 		/*disturbance observer*/
-		if(firstRound ==1){
-			tau_dob_bottom_l = 0;
-			integral_tau_dob_bottom_l += ((K_tn*ia_bottom_l + dtheta_res_bottom_l*J_n*GDIS) - integral_tau_dob_bottom_l)*GDIS*ST;
-		}
-		else{
-			tau_dob_bottom_l = integral_tau_dob_bottom_l - dtheta_res_bottom_l*J_n*GDIS;
-			integral_tau_dob_bottom_l += ((K_tn*ia_bottom_l + dtheta_res_bottom_l*J_n*GDIS) - integral_tau_dob_bottom_l)*GDIS*ST;
-		}
-		
-		if(firstRound ==1){
-			tau_dob_bottom_r = 0;
-			integral_tau_dob_bottom_r += ((K_tn*ia_bottom_r + dtheta_res_bottom_r*J_n*GDIS) - integral_tau_dob_bottom_r)*GDIS*ST;
-		}
-		else{
-			tau_dob_bottom_r = integral_tau_dob_bottom_r - dtheta_res_bottom_r*J_n*GDIS;
-			integral_tau_dob_bottom_r += ((K_tn*ia_bottom_r + dtheta_res_bottom_r*J_n*GDIS) - integral_tau_dob_bottom_r)*GDIS*ST;
-		}
+		tau_dob_bottom_l = integral_tau_dob_bottom_l - dtheta_res_bottom_l*J_n*GDIS;		
+		integral_tau_dob_bottom_l += ((K_tn*ia_bottom_l + dtheta_res_bottom_l*J_n*GDIS) - integral_tau_dob_bottom_l)*GDIS*ST;
+	
+		tau_dob_bottom_r = integral_tau_dob_bottom_r - dtheta_res_bottom_r*J_n*GDIS;
+		integral_tau_dob_bottom_r += ((K_tn*ia_bottom_r + dtheta_res_bottom_r*J_n*GDIS) - integral_tau_dob_bottom_r)*GDIS*ST;
 
 		/*Mobile Robot Reaction Force*/
 
@@ -270,10 +273,9 @@ int main(void)
 		tau_res_bottom = (tau_dob_bottom_l-tau_dob_bottom_r)*R_r/(R_w);
 
 		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_res_bottom, y_res_bottom, phi_res_bottom, x_o, y_o, phi_o, f_dis_bottom, f_res_bottom, tau_res_bottom, x_c_bottom, y_c_bottom, x_wall, y_wall, reaction_wall);
-		
+	
 		t += ST;
-		firstRound = 0;
-      
+		firstRound=0;
 	}
 
 	fclose(fp);

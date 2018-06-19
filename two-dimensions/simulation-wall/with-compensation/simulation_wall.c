@@ -13,8 +13,8 @@
 #define M_o	3.0 //kg
 #define J_o	2.0
 #define L_o	1.000 //meter
-#define R_w	0.030 //meter
-#define R_r	0.10 //meter
+#define R_w	0.033 //meter
+#define R_r	0.08 //meter
 #define K_tn	1.7   //Nm
 #define J_n	0.1 //Ns^2/m
 #define Pi	3.1415
@@ -23,6 +23,8 @@
 #define K_phi	5000.0
 #define K_dphi	50.0
 #define K_intphi	0.2
+#define M_r	1.0 //kg
+#define J_r	0.0032
 
 int main(void)
 {
