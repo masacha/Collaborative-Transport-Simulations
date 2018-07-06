@@ -59,7 +59,7 @@ def animate(i):
 
 anim = animation.FuncAnimation(fig, animate, 
                                init_func=init, 
-                               frames=250, 
+                               frames=25, 
                                interval=100.0,
 			       blit = True)
 
