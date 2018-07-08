@@ -24,29 +24,31 @@
 #define L_o	1.000 //meter
 
 //Friction from floor
-#define D_f	0.0
-#define D_f_rotation	0
+#define D_f	50.0
+#define D_f_rotation	100
 
 //Gains
 #define GDIS	500.0
-#define K_p	10.0
-#define K_v	50.0
-#define M_c	1.0
-#define K_f	0.5
-#define K_phi	5000.0
-#define K_dphi	50.0
-#define K_intphi	0.2
+#define K_p	0.5
+#define K_i	5.0
+#define K_d 	0.1
+#define K_pa	0.5
+#define K_ia	5.0
+#define K_da 	0.1
 
 int main(void)
 {
 	double t = 0.0;
+	double v_t = 0.0;
+	double w_t = 0.0;
 
 	int firstRound = 1;
 
 /*LEFT1*/
 /*Reference Commands*/
 
-	double f_left1_command = 0.0;
+	double cmd_velocity_left1 = 0.0;
+	double cmd_angular_velocity_left1 = 0.0;
 
 /*Mobile Robot Outputs*/
 
@@ -67,10 +69,14 @@ int main(void)
 	double dl_left1 = 0.0;
 	double l_left1_prev = 0.0;
 
-	double err_x_left1 = 0.0;
-	double derr_x_left1 = 0.0;
-	double err_y_left1 = 0.0;
-	double derr_y_left1 = 0.0;
+	double err_vel_left1 = 0.0;
+	double err_int_vel_left1 = 0.0;
+	double err_der_vel_left1 = 0.0;
+	double pre_err_vel_left1 = 0.0;
+	double err_ang_left1 = 0.0;
+	double err_int_ang_left1 = 0.0;
+	double err_der_ang_left1 = 0.0;
+	double pre_err_ang_left1 = 0.0;
 
 	double f_res_left1 = 0.0;
 	double tau_res_left1 = 0.0;
@@ -84,6 +90,9 @@ int main(void)
 
 
 /*left1 Motor*/
+
+	double cmd_linear_acceleration_left1 = 0.0;
+	double cmd_angular_acceleration_left1 = 0.0;
 
 	double ddtheta_ref_left1_l = 0.0;
 	double ddtheta_ref_left1_r = 0.0;
@@ -121,7 +130,8 @@ int main(void)
 /*LEFT2*/
 /*Reference Commands*/
 
-	double f_left2_command = 0.0;
+	double cmd_velocity_left2 = 0.0;
+	double cmd_angular_velocity_left2 = 0.0;
 
 /*Mobile Robot Outputs*/
 
@@ -142,11 +152,14 @@ int main(void)
 	double dl_left2 = 0.0;
 	double l_left2_prev = 0.0;
 
-	double err_x_left2 = 0.0;
-	double derr_x_left2 = 0.0;
-	double err_y_left2 = 0.0;
-	double derr_y_left2 = 0.0;
-
+	double err_vel_left2 = 0.0;
+	double err_int_vel_left2 = 0.0;
+	double err_der_vel_left2 = 0.0;
+	double pre_err_vel_left2 = 0.0;
+	double err_ang_left2 = 0.0;
+	double err_int_ang_left2 = 0.0;
+	double err_der_ang_left2 = 0.0;
+	double pre_err_ang_left2 = 0.0;
 	double f_res_left2 = 0.0;
 	double tau_res_left2 = 0.0;
 
@@ -158,6 +171,9 @@ int main(void)
 	double f_dis_left2 = 0.0;
 
 /*left2 Motor*/
+
+	double cmd_linear_acceleration_left2 = 0.0;
+	double cmd_angular_acceleration_left2 = 0.0;
 
 	double ddtheta_ref_left2_l = 0.0;
 	double ddtheta_ref_left2_r = 0.0;
@@ -196,7 +212,8 @@ int main(void)
 /*RIGHT 1*/
 /*Reference Commands*/
 
-	double f_right1_command = 0.0;
+	double cmd_velocity_right1 = 0.0;
+	double cmd_angular_velocity_right1 = 0.0;
 
 /*Mobile Robot Outputs*/
 
@@ -217,10 +234,14 @@ int main(void)
 	double dl_right1 = 0.0;
 	double l_right1_prev = 0.0;
 
-	double err_x_right1 = 0.0;
-	double derr_x_right1 = 0.0;
-	double err_y_right1 = 0.0;
-	double derr_y_right1 = 0.0;
+	double err_vel_right1 = 0.0;
+	double err_int_vel_right1 = 0.0;
+	double err_der_vel_right1 = 0.0;
+	double pre_err_vel_right1 = 0.0;
+	double err_ang_right1 = 0.0;
+	double err_int_ang_right1 = 0.0;
+	double err_der_ang_right1 = 0.0;
+	double pre_err_ang_right1 = 0.0;
 
 	double f_res_right1 = 0.0;
 	double tau_res_right1 = 0.0;
@@ -233,6 +254,9 @@ int main(void)
 	double f_dis_right1 = 0.0;
 
 /*right1 Motor*/
+
+	double cmd_linear_acceleration_right1 = 0.0;
+	double cmd_angular_acceleration_right1 = 0.0;
 
 	double ddtheta_ref_right1_l = 0.0;
 	double ddtheta_ref_right1_r = 0.0;
@@ -283,7 +307,7 @@ int main(void)
 
 	FILE *fp;
 
-	if((fp=fopen("simulation_transport.dat", "w"))==NULL){
+	if((fp=fopen("simulation_transport_all_velocity.dat", "w"))==NULL){
 		fprintf(stderr, "File open failed.\n");
 		return 1;
 	}
@@ -291,10 +315,28 @@ int main(void)
 	while(t <= T){	
 
 
-		/*left1 commands*/
+		if (t<2.5){
+			v_t = 0.2;
+			w_t = 0.0;
+		}
+		else if(t>=2.5 && t<5){
+			v_t = 0.2;
+			w_t = Pi/25;
+		}
+		else if(t>=5 && t<7.5){
+			v_t = 0.2;
+			w_t = 0.0;
+		}
+		else{
+			v_t = 0.0;
+			w_t = 0.0;
+		}
 
-		f_left1_command = 2.5;
+		/*left1 commands*/
 		
+		cmd_velocity_left1 = v_t;
+		cmd_angular_velocity_left1 = w_t;
+
 		x_c_left1 = x_res_left1 + cos(phi_o)*R_r-sin(phi_o)*(0.0);
 		y_c_left1 = y_res_left1 + sin(phi_o)*R_r+cos(phi_o)*(0.0);
 
@@ -310,13 +352,22 @@ int main(void)
 		
 		/*left1 Mobile Robot Controller*/
 
-		dv_ref_left1 = K_f*(f_left1_command-f_dis_left1);
-		dw_ref_left1 = 0.0;
+		err_vel_left1 = cmd_velocity_left1 - (dtheta_res_left1_l+dtheta_res_left1_r)*R_w/2.0;
+   		err_int_vel_left1 = err_int_vel_left1 + err_vel_left1*ST;
+		err_der_vel_left1 = (err_vel_left1 - pre_err_vel_left1)/ST;
+		pre_err_vel_left1 = err_vel_left1;
+		err_ang_left1 = cmd_angular_velocity_left1 - dphi_res_left1;
+		err_int_ang_left1 = err_int_ang_left1 + err_ang_left1*ST;
+		err_der_ang_left1 = (err_ang_left1 - pre_err_ang_left1)/ST;
+		pre_err_ang_left1 = err_ang_left1;
+
+		cmd_linear_acceleration_left1 = K_p*err_vel_left1 + K_i*err_int_vel_left1+ K_d*err_der_vel_left1;
+		cmd_angular_acceleration_left1 = K_pa*err_ang_left1 + K_ia*err_int_ang_left1 + K_da*err_der_ang_left1;
 
 		/*left1 Motor Controller*/
 
-		ddtheta_ref_left1_l = dv_ref_left1/R_w - R_r*dw_ref_left1/R_w;
-		ddtheta_ref_left1_r = dv_ref_left1/R_w + R_r*dw_ref_left1/R_w;
+		ddtheta_ref_left1_l = cmd_linear_acceleration_left1 - cmd_angular_acceleration_left1;
+		ddtheta_ref_left1_r = cmd_linear_acceleration_left1 + cmd_angular_acceleration_left1;
 
 		ia_ref_left1_l = J_n*ddtheta_ref_left1_l/K_tn;
 		ia_ref_left1_r = J_n*ddtheta_ref_left1_r/K_tn;
@@ -348,7 +399,8 @@ int main(void)
 
 		/*left2 commands*/
 
-		f_left2_command = 2.5;
+		cmd_velocity_left2 = v_t;
+		cmd_angular_velocity_left2 = w_t;
 		
 		x_c_left2 = x_res_left2 + cos(phi_o)*R_r-sin(phi_o)*(0.0);
 		y_c_left2 = y_res_left2 + sin(phi_o)*R_r+cos(phi_o)*(0.0);
@@ -365,13 +417,22 @@ int main(void)
 
 		/*left2 Mobile Robot Controller*/
 
-		dv_ref_left2 = K_f*(f_left2_command-f_dis_left2);
-		dw_ref_left2 = 0.0;
+		err_vel_left2 = cmd_velocity_left2 - (dtheta_res_left2_l+dtheta_res_left2_r)*R_w/2.0;
+   		err_int_vel_left2 = err_int_vel_left2 + err_vel_left2*ST;
+		err_der_vel_left2 = (err_vel_left2 - pre_err_vel_left2)/ST;
+		pre_err_vel_left2 = err_vel_left2;
+		err_ang_left2 = cmd_angular_velocity_left2 - dphi_res_left2;
+		err_int_ang_left2 = err_int_ang_left2 + err_ang_left2*ST;
+		err_der_ang_left2 = (err_ang_left2 - pre_err_ang_left2)/ST;
+		pre_err_ang_left2 = err_ang_left2;
+
+		cmd_linear_acceleration_left2 = K_p*err_vel_left2 + K_i*err_int_vel_left2+ K_d*err_der_vel_left2;
+		cmd_angular_acceleration_left2 = K_pa*err_ang_left2 + K_ia*err_int_ang_left2 + K_da*err_der_ang_left2;
 
 		/*left2 Motor Controller*/
 
-		ddtheta_ref_left2_l = dv_ref_left2/R_w - R_r*dw_ref_left2/R_w;
-		ddtheta_ref_left2_r = dv_ref_left2/R_w + R_r*dw_ref_left2/R_w;
+		ddtheta_ref_left2_l = cmd_linear_acceleration_left2 - cmd_angular_acceleration_left2;
+		ddtheta_ref_left2_r = cmd_linear_acceleration_left2 + cmd_angular_acceleration_left2;
 		ia_ref_left2_l = J_n*ddtheta_ref_left2_l/K_tn;
 		ia_ref_left2_r = J_n*ddtheta_ref_left2_r/K_tn;
 
@@ -403,9 +464,9 @@ int main(void)
 
 		/*right1 commands*/
 
+		cmd_velocity_right1 = v_t;
+		cmd_angular_velocity_right1 = w_t;
 
-		f_right1_command = -5.0;
-		
 		x_c_right1 = x_res_right1 + cos(phi_o+Pi)*(R_r)-sin(phi_o+Pi)*(0.0);
 		y_c_right1 = y_res_right1+ sin(phi_o+Pi)*(R_r)+cos(phi_o+Pi)*(0.0);
 
@@ -421,13 +482,22 @@ int main(void)
 
 		/*right1 Mobile Robot Controller*/
 
-		dv_ref_right1 = K_f*(f_right1_command-f_dis_right1);
-		dw_ref_right1 = 0.0;
+		err_vel_right1 = cmd_velocity_right1 - (dtheta_res_right1_l+dtheta_res_right1_r)*R_w/2.0;
+   		err_int_vel_right1 = err_int_vel_right1 + err_vel_right1*ST;
+		err_der_vel_right1 = (err_vel_right1 - pre_err_vel_right1)/ST;
+		pre_err_vel_right1 = err_vel_right1;
+		err_ang_right1 = cmd_angular_velocity_right1 - dphi_res_right1;
+		err_int_ang_right1 = err_int_ang_right1 + err_ang_right1*ST;
+		err_der_ang_right1 = (err_ang_right1 - pre_err_ang_right1)/ST;
+		pre_err_ang_right1 = err_ang_right1;
+
+		cmd_linear_acceleration_right1 = K_p*err_vel_right1 + K_i*err_int_vel_right1+ K_d*err_der_vel_right1;
+		cmd_angular_acceleration_right1 = K_pa*err_ang_right1 + K_ia*err_int_ang_right1 + K_da*err_der_ang_right1;
 
 		/*right1 Motor Controller*/
 
-		ddtheta_ref_right1_l = dv_ref_right1/R_w - R_r*dw_ref_right1/R_w;
-		ddtheta_ref_right1_r = dv_ref_right1/R_w + R_r*dw_ref_right1/R_w;
+		ddtheta_ref_right1_l = cmd_linear_acceleration_right1 - cmd_angular_acceleration_right1;
+		ddtheta_ref_right1_r = cmd_linear_acceleration_right1 + cmd_angular_acceleration_right1;
 
 		ia_ref_right1_l = J_n*ddtheta_ref_right1_l/K_tn;
 		ia_ref_right1_r = J_n*ddtheta_ref_right1_r/K_tn;

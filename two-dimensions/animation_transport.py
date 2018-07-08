@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
-data = np.genfromtxt('simulation_transport_all_velocity.dat',
+data = np.genfromtxt('simulation_transport.dat',
                      names=True,
                      dtype=None,
                      delimiter=' ')
