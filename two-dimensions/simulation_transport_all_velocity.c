@@ -217,7 +217,7 @@ int main(void)
 
 /*Mobile Robot Outputs*/
 
-	double x_res_right1 = +1.1;
+	double x_res_right1 = +2.1;
 	double dx_res_right1 = 0.0;
 	double ddx_res_right1 = 0.0;
 	double y_res_right1 = 0.0;
@@ -303,6 +303,14 @@ int main(void)
 	double phi_o = 0.0;
 	double dphi_o = 0.0;
 	double ddphi_o = 0.0;
+	double x_o_left = 0.0;
+	double y_o_left = 0.0;
+	double x_o_right = 0.0;
+	double y_o_right = 0.0;
+	double x_o_bottom = 0.0;
+	double y_o_bottom = 0.0;
+	double x_o_top = 0.0;
+	double y_o_top = 0.0;
 
 
 	FILE *fp;
@@ -325,12 +333,13 @@ int main(void)
 		}
 		else if(t>=5 && t<7.5){
 			v_t = 0.2;
-			w_t = 0.0;
+			w_t = -Pi/25;
 		}
 		else{
 			v_t = 0.0;
 			w_t = 0.0;
 		}
+
 
 		/*left1 commands*/
 		
@@ -340,7 +349,7 @@ int main(void)
 		x_c_left1 = x_res_left1 + cos(phi_o)*R_r-sin(phi_o)*(0.0);
 		y_c_left1 = y_res_left1 + sin(phi_o)*R_r+cos(phi_o)*(0.0);
 
-		if(cos(phi_o)*(x_c_left1-x_o+cos(phi_o)*L_o)+sin(phi_o)*(y_c_left1-y_o+sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_left1-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_left1-x_o-sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_left1-y_o-cos(phi_o)*L_o)-sin(phi_o)*(x_c_left1-x_o+sin(phi_o)*L_o)<0){
+		if(cos(phi_o)*(x_c_left1-x_o_left)+sin(phi_o)*(y_c_left1-y_o_left)>0 && cos(phi_o)*(y_c_left1-y_o_bottom)-sin(phi_o)*(x_c_left1-x_o_bottom)>0 && cos(phi_o)*(y_c_left1-y_o_top)-sin(phi_o)*(x_c_left1-x_o_top)<0){
 			f_dis_left1 = K_o*l_left1 + D_o*dl_left1; 
 		}
 		else{
@@ -405,7 +414,7 @@ int main(void)
 		x_c_left2 = x_res_left2 + cos(phi_o)*R_r-sin(phi_o)*(0.0);
 		y_c_left2 = y_res_left2 + sin(phi_o)*R_r+cos(phi_o)*(0.0);
 
-		if(cos(phi_o)*(x_c_left2-x_o+cos(phi_o)*L_o)+sin(phi_o)*(y_c_left2-y_o+sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_left2-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_left2-x_o-sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_left2-y_o-cos(phi_o)*L_o)-sin(phi_o)*(x_c_left2-x_o+sin(phi_o)*L_o)<0){
+		if (cos(phi_o)*(x_c_left2-x_o_left)+sin(phi_o)*(y_c_left2-y_o_left)>0 && cos(phi_o)*(y_c_left2-y_o_bottom)-sin(phi_o)*(x_c_left2-x_o_bottom)>0 && cos(phi_o)*(y_c_left2-y_o_top)-sin(phi_o)*(x_c_left2-x_o_top)<0){
 			f_dis_left2 = K_o*l_left2 + D_o*dl_left2; 
 		}
 		else{
@@ -468,10 +477,10 @@ int main(void)
 		cmd_angular_velocity_right1 = w_t;
 
 		x_c_right1 = x_res_right1 + cos(phi_o+Pi)*(R_r)-sin(phi_o+Pi)*(0.0);
-		y_c_right1 = y_res_right1+ sin(phi_o+Pi)*(R_r)+cos(phi_o+Pi)*(0.0);
+		y_c_right1 = y_res_right1 + sin(phi_o+Pi)*(R_r)+cos(phi_o+Pi)*(0.0);
 
-		if(cos(phi_o)*(x_c_right1-x_o-cos(phi_o)*L_o)+sin(phi_o)*(y_c_right1-y_o-sin(phi_o)*L_o)<0 && cos(phi_o)*(y_c_right1-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_right1-x_o-sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_right1-y_o-cos(phi_o)*L_o)-sin(phi_o)*(x_c_right1-x_o+sin(phi_o)*L_o)<0){
-			f_dis_right1 = -(K_o*l_right1 + D_o*dl_right1); 
+		if(cos(phi_o)*(x_c_right1-x_o_right)+sin(phi_o)*(y_c_right1-y_o_right)<0 && cos(phi_o)*(y_c_right1-y_o_bottom)-sin(phi_o)*(x_c_right1-x_o_bottom)>0 && cos(phi_o)*(y_c_right1-y_o_top)-sin(phi_o)*(x_c_right1-x_o_top)<0){
+			f_dis_right1 = -(K_o*l_right1 + D_o*dl_right1);
 		}
 		else{
 			f_dis_right1 = 0.0;
@@ -543,8 +552,17 @@ int main(void)
 		dphi_o += ddphi_o*ST;
 		phi_o += dphi_o*ST;
 		intphi_o += phi_o;
+		
+		x_o_left = x_o + cos(phi_o)*(-L_o)-sin(phi_o)*(0.0);
+		y_o_left = y_o + sin(phi_o)*(-L_o)+cos(phi_o)*(0.0);
+		x_o_right = x_o + cos(phi_o)*(L_o)-sin(phi_o)*(0.0);
+		y_o_right = y_o + sin(phi_o)*(L_o)+cos(phi_o)*(0.0);
+		x_o_top = x_o + cos(phi_o)*(0.0)-sin(phi_o)*(L_o);
+		y_o_top = y_o + sin(phi_o)*(0.0)+cos(phi_o)*(L_o);
+		x_o_bottom = x_o + cos(phi_o)*(0.0)-sin(phi_o)*(-L_o);
+		y_o_bottom = y_o + sin(phi_o)*(0.0)+cos(phi_o)*(-L_o);
 
-		l_left1 = fabs(cos(phi_o)*(x_c_left1-x_o+cos(phi_o)*L_o)+sin(phi_o)*(y_c_left1-y_o+sin(phi_o)*L_o));
+		l_left1 = fabs(cos(phi_o)*(x_c_left1-x_o_left)+sin(phi_o)*(y_c_left1-y_o_left));
 		if (firstRound==1){
 			dl_left1 = 0.0;
 		}
@@ -553,7 +571,7 @@ int main(void)
 		}
 		l_left1_prev = l_left1;
 
-		l_left2 = fabs(cos(phi_o)*(x_c_left2-x_o+cos(phi_o)*L_o)+sin(phi_o)*(y_c_left2-y_o+sin(phi_o)*L_o));
+		l_left2 = fabs(cos(phi_o)*(x_c_left2-x_o_left)+sin(phi_o)*(y_c_left2-y_o_left));
 		if (firstRound==1){
 			dl_left2 = 0.0;
 		}
@@ -562,7 +580,7 @@ int main(void)
 		}
 		l_left2_prev = l_left2;
 
-		l_right1 = fabs(cos(phi_o)*(x_c_right1-x_o-cos(phi_o)*L_o)+sin(phi_o)*(y_c_right1-y_o-sin(phi_o)*L_o));
+		l_right1 = fabs(cos(phi_o)*(x_c_right1-x_o_right)+sin(phi_o)*(y_c_right1-y_o_right));
 		if (firstRound==1){
 			dl_right1 = 0.0;
 		}
@@ -641,7 +659,7 @@ int main(void)
 		f_res_right1 = (tau_dob_right1_l+tau_dob_right1_r)/R_w;
 		tau_res_right1 = (tau_dob_right1_l-tau_dob_right1_r)*R_r/(R_w);
 
-		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_o, y_o, phi_o, x_res_left1, y_res_left1, phi_res_left1, f_dis_left1, x_res_right1, y_res_right1, phi_res_right1, f_dis_right1, x_res_left2, y_res_left2, phi_res_left2, f_dis_left2);
+		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_o, y_o, phi_o, x_res_left1, y_res_left1, phi_res_left1, x_res_left2, y_res_left2, phi_res_left2, x_res_right1, y_res_right1, phi_res_right1, x_o_left, y_o_left, x_o_right, y_o_right, x_c_left1, y_c_left1, x_c_right1, y_c_right1, f_dis_left1, f_dis_left2, f_dis_right1);
 		
 		t += ST;
 		firstRound = 0;
