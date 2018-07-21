@@ -3,28 +3,39 @@
 
 #define	T	10 //seconds
 #define ST	0.0001 //second
-#define GDIS	500.0
-#define K_p	10.0
-#define K_v	50.0
-#define M_c	1.0
-#define K_f	1.0
+#define Pi	3.1415
+
+//Wheel parameters
+#define K_tn	0.43   //Nm
+#define J_n	0.01 //Ns^2/m
+#define D_r	0.06
+
+//Robot parameters
+#define R_w	0.033 //meter
+#define R_r	0.08 //meter
+#define M_r	1.0 //kg
+#define J_r	0.0032
+
+//Object parameters
 #define K_o	1000.0 //N/m
 #define D_o	1.0
 #define M_o	3.0 //kg
 #define J_o	2.0
 #define L_o	1.000 //meter
-#define R_w	0.033 //meter
-#define R_r	0.08 //meter
-#define K_tn	1.7   //Nm
-#define J_n	0.1 //Ns^2/m
-#define Pi	3.1415
+
+//Friction from floor
 #define D_f	50.0
 #define D_f_rotation	100
+
+//Gains
+#define GDIS	500.0
+#define K_p	10.0
+#define K_v	50.0
+#define M_c	1.0
+#define K_f	1.0
 #define K_phi	5000.0
 #define K_dphi	50.0
 #define K_intphi	0.2
-#define M_r	1.0 //kg
-#define J_r	0.0032
 
 int main(void)
 {
@@ -500,14 +511,13 @@ int main(void)
 
 		if(cos(phi_o)*(y_c_bottom-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_bottom-x_o-sin(phi_o)*L_o)>0){
 			f_dis_bottom = K_o*l_bottom + D_o*dl_bottom; 
-			tau_dis_bottom_l = f_dis_bottom*R_w*(1-sin(phi_res_bottom-phi_o))/2;
-			tau_dis_bottom_r = f_dis_bottom*R_w*(1+sin(phi_res_bottom-phi_o))/2;
 		}
 		else{
 			f_dis_bottom = 0.0;
-			tau_dis_bottom_l = 0.0;
-			tau_dis_bottom_r = 0.0;
 		}
+		
+		tau_dis_bottom_l = f_dis_bottom*R_w*(1-sin(phi_res_bottom-phi_o))/2 + D_r*dtheta_res_bottom_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_bottom_l+(M_r*R_r*R_r-J_r)*ddtheta_res_bottom_r);
+		tau_dis_bottom_r = f_dis_bottom*R_w*(1+sin(phi_res_bottom-phi_o))/2 + D_r*dtheta_res_bottom_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_bottom_l+(M_r*R_r*R_r+J_r)*ddtheta_res_bottom_r);
 		
 		/*Bottom Mobile Robot Controller*/
 
@@ -578,13 +588,13 @@ int main(void)
 
 		if(cos(phi_o)*(x_c_left1-x_o+cos(phi_o)*L_o)+sin(phi_o)*(y_c_left1-y_o+sin(phi_o)*L_o)>0){
 			f_dis_left1 = K_o*l_left1 + D_o*dl_left1; 
-			tau_dis_left1_l = f_dis_left1*R_w*(1-sin(phi_res_left1-phi_o))/2;
-			tau_dis_left1_r = f_dis_left1*R_w*(1+sin(phi_res_left1-phi_o))/2;
 		}
 		else{
 			f_dis_left1 = 0.0;
-			tau_dis_left1_l = 0.0;
-			tau_dis_left1_r = 0.0;
+		}
+		
+		tau_dis_left1_l = f_dis_left1*R_w/2 + D_r*dtheta_res_left1_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_left1_l+(M_r*R_r*R_r-J_r)*ddtheta_res_left1_r);
+		tau_dis_left1_r = f_dis_left1*R_w/2 + D_r*dtheta_res_left1_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_left1_l+(M_r*R_r*R_r+J_r)*ddtheta_res_left1_r);
 		}
 		
 		/*left1 Mobile Robot Controller*/
@@ -657,14 +667,13 @@ int main(void)
 
 		if(cos(phi_o)*(x_c_left2-x_o+cos(phi_o)*L_o)+sin(phi_o)*(y_c_left2-y_o+sin(phi_o)*L_o)>0){
 			f_dis_left2 = K_o*l_left2 + D_o*dl_left2; 
-			tau_dis_left2_l = f_dis_left2*R_w*(1-sin(phi_res_left2-phi_o))/2;
-			tau_dis_left2_r = f_dis_left2*R_w*(1+sin(phi_res_left2-phi_o))/2;
 		}
 		else{
 			f_dis_left2 = 0.0;
-			tau_dis_left2_l = 0.0;
-			tau_dis_left2_r = 0.0;
 		}
+		
+		tau_dis_left2_l = f_dis_left2*R_w*(1-sin(phi_res_left2-phi_o))/2 + D_r*dtheta_res_left2_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_left2_l+(M_r*R_r*R_r-J_r)*ddtheta_res_left2_r);
+		tau_dis_left2_r = f_dis_left2*R_w*(1+sin(phi_res_left2-phi_o))/2 + D_r*dtheta_res_left2_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_left2_l+(M_r*R_r*R_r+J_r)*ddtheta_res_left2_r);
 		
 		/*left2 Mobile Robot Controller*/
 
@@ -736,15 +745,15 @@ int main(void)
 
 		if(cos(phi_o)*(x_c_right1-x_o-cos(phi_o)*L_o)+sin(phi_o)*(y_c_right1-y_o-sin(phi_o)*L_o)<0){
 			f_dis_right1 = K_o*l_right1 + D_o*dl_right1; 
-			tau_dis_right1_l = f_dis_right1*R_w*(1-sin(phi_res_right1-phi_o))/2;
-			tau_dis_right1_r = f_dis_right1*R_w*(1+sin(phi_res_right1-phi_o))/2;
 		}
 		else{
 			f_dis_right1 = 0.0;
-			tau_dis_right1_l = 0.0;
-			tau_dis_right1_r = 0.0;
 		}
 		
+		tau_dis_right1_l = f_dis_right1*R_w*(1-sin(phi_res_right1-phi_o))/2 + D_r*dtheta_res_right1_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_right1_l+(M_r*R_r*R_r-J_r)*ddtheta_res_right1_r);
+		tau_dis_right1_r = f_dis_right1*R_w*(1+sin(phi_res_right1-phi_o))/2 + D_r*dtheta_res_right1_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_right1_l+(M_r*R_r*R_r+J_r)*ddtheta_res_right1_r);
+	
+
 		/*right1 Mobile Robot Controller*/
 
 		err_x_right1 = x_right1_command - x_res_right1;
@@ -815,14 +824,13 @@ int main(void)
 
 		if(cos(phi_o)*(x_c_right2-x_o-cos(phi_o)*L_o)+sin(phi_o)*(y_c_right2-y_o-sin(phi_o)*L_o)<0){
 			f_dis_right2 = K_o*l_right2 + D_o*dl_right2; 
-			tau_dis_right2_l = f_dis_right2*R_w*(1-sin(phi_res_right2-phi_o))/2;
-			tau_dis_right2_r = f_dis_right2*R_w*(1+sin(phi_res_right2-phi_o))/2;
 		}
 		else{
 			f_dis_right2 = 0.0;
-			tau_dis_right2_l = 0.0;
-			tau_dis_right2_r = 0.0;
 		}
+		
+		tau_dis_right2_l = f_dis_right2*R_w*(1-sin(phi_res_right2-phi_o))/2 + D_r*dtheta_res_right2_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_right2_l+(M_r*R_r*R_r-J_r)*ddtheta_res_right2_r);
+		tau_dis_right2_r = f_dis_right2*R_w*(1+sin(phi_res_right2-phi_o))/2 + D_r*dtheta_res_right2_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_right2_l+(M_r*R_r*R_r+J_r)*ddtheta_res_right2_r);
 		
 		/*right2 Mobile Robot Controller*/
 
@@ -881,10 +889,10 @@ int main(void)
 		else{
 			reaction_wall = 0.0;
 		}
-		ddx_o = (f_dis_bottom*cos(phi_res_bottom)+f_dis_left1*cos(phi_res_left1)+f_dis_left2*cos(phi_res_left2)+f_dis_right1*cos(phi_res_right1)+f_dis_right2*cos(phi_res_right2))/M_o - D_f*dx_o + sin(phi_o)*reaction_wall;
+		ddx_o = (f_dis_bottom*sin(phi_o)+f_dis_left1*cos(phi_o)+f_dis_left2*cos(phi_o)+f_dis_right1*cos(phi_o)+f_dis_right2*cos(phi_o))/M_o - D_f*dx_o + sin(phi_o)*reaction_wall;
 		dx_o += ddx_o*ST;
 		x_o += dx_o*ST;
-		ddy_o = (f_dis_bottom*sin(phi_res_bottom)+f_dis_left1*sin(phi_res_left1)+f_dis_left2*sin(phi_res_left2)+f_dis_right1*sin(phi_res_right1)+f_dis_right2*sin(phi_res_right2))/M_o - D_f*dy_o - cos(phi_o)*reaction_wall;
+		ddy_o = (f_dis_bottom+cos(phi_o)+f_dis_left1*sin(phi_o)+f_dis_left2*sin(phi_o)+f_dis_right1*sin(phi_o)+f_dis_right2*sin(phi_o))/M_o - D_f*dy_o - cos(phi_o)*reaction_wall;
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
 		ddphi_o = (f_dis_bottom*(-sin(phi_res_bottom)*(x_o-x_c_bottom)+cos(phi_res_bottom)*(y_o-y_c_bottom))

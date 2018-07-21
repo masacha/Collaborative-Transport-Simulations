@@ -52,7 +52,7 @@ int main(void)
 
 /*Mobile Robot Outputs*/
 
-	double x_res_left1 = -1.1;
+	double x_res_left1 = -1.08;
 	double dx_res_left1 = 0.0;
 	double ddx_res_left1 = 0.0;
 	double y_res_left1 = 0.6;
@@ -135,7 +135,7 @@ int main(void)
 
 /*Mobile Robot Outputs*/
 
-	double x_res_left2 = -1.1;
+	double x_res_left2 = -1.08;
 	double dx_res_left2 = 0.0;
 	double ddx_res_left2 = 0.0;
 	double y_res_left2 = -0.6;
@@ -217,7 +217,7 @@ int main(void)
 
 /*Mobile Robot Outputs*/
 
-	double x_res_right1 = +2.1;
+	double x_res_right1 = +1.08;
 	double dx_res_right1 = 0.0;
 	double ddx_res_right1 = 0.0;
 	double y_res_right1 = 0.0;
@@ -343,7 +343,7 @@ int main(void)
 
 		/*left1 commands*/
 		
-		cmd_velocity_left1 = v_t;
+		cmd_velocity_left1 = v_t-w_t*0.6;
 		cmd_angular_velocity_left1 = w_t;
 
 		x_c_left1 = x_res_left1 + cos(phi_o)*R_r-sin(phi_o)*(0.0);
@@ -408,7 +408,7 @@ int main(void)
 
 		/*left2 commands*/
 
-		cmd_velocity_left2 = v_t;
+		cmd_velocity_left2 = v_t+w_t*0.6;
 		cmd_angular_velocity_left2 = w_t;
 		
 		x_c_left2 = x_res_left2 + cos(phi_o)*R_r-sin(phi_o)*(0.0);
@@ -539,10 +539,10 @@ int main(void)
 
 		/*Object Motion*/
 
-		ddx_o = (f_dis_left1*cos(phi_res_left1)+f_dis_left2*cos(phi_res_left2)+f_dis_right1*cos(phi_res_right1))/M_o - D_f*dx_o;
+		ddx_o = (f_dis_left1*cos(phi_o)+f_dis_left2*cos(phi_o)+f_dis_right1*cos(phi_o))/M_o - D_f*dx_o;
 		dx_o += ddx_o*ST;
 		x_o += dx_o*ST;
-		ddy_o = (f_dis_left1*sin(phi_res_left1)+f_dis_left2*sin(phi_res_left2)+f_dis_right1*sin(phi_res_right1))/M_o - D_f*dy_o;
+		ddy_o = (f_dis_left1*sin(phi_o)+f_dis_left2*sin(phi_o)+f_dis_right1*sin(phi_o))/M_o - D_f*dy_o;
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
 		ddphi_o = (f_dis_left1*(-sin(phi_res_left1)*(x_o-x_c_left1)+cos(phi_res_left1)*(y_o-y_c_left1))

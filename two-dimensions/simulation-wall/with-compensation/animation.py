@@ -49,14 +49,14 @@ def init():
     return bottom, bottomfront, left1, left1front, left2, left2front, right1, right1front, right2, right2front, rectangle, wall
 
 def animate(i):
-    xtopleft = np.cos(data[frame_skip*i][6])*(data[frame_skip*i][4]-1.0)-np.sin(data[frame_skip*i][6])*(data[frame_skip*i][5]+1.0)
-    ytopleft = np.sin(data[frame_skip*i][6])*(data[frame_skip*i][4]-1.0)+np.cos(data[frame_skip*i][6])*(data[frame_skip*i][5]+1.0)
-    xtopright = np.cos(data[frame_skip*i][6])*(data[frame_skip*i][4]+1.0)-np.sin(data[frame_skip*i][6])*(data[frame_skip*i][5]+1.0)
-    ytopright = np.sin(data[frame_skip*i][6])*(data[frame_skip*i][4]+1.0)+np.cos(data[frame_skip*i][6])*(data[frame_skip*i][5]+1.0)
-    xbottomright = np.cos(data[frame_skip*i][6])*(data[frame_skip*i][4]+1.0)-np.sin(data[frame_skip*i][6])*(data[frame_skip*i][5]-1.0)
-    ybottomright = np.sin(data[frame_skip*i][6])*(data[frame_skip*i][4]+1.0)+np.cos(data[frame_skip*i][6])*(data[frame_skip*i][5]-1.0)
-    xbottomleft = np.cos(data[frame_skip*i][6])*(data[frame_skip*i][4]-1.0)-np.sin(data[frame_skip*i][6])*(data[frame_skip*i][5]-1.0)
-    ybottomleft = np.sin(data[frame_skip*i][6])*(data[frame_skip*i][4]-1.0)+np.cos(data[frame_skip*i][6])*(data[frame_skip*i][5]-1.0)
+    xtopleft = data[frame_skip*i][4] + np.cos(data[frame_skip*i][6])*(-1.0)-np.sin(data[frame_skip*i][6])*(+1.0)
+    ytopleft = data[frame_skip*i][5] + np.sin(data[frame_skip*i][6])*(-1.0)+np.cos(data[frame_skip*i][6])*(+1.0)
+    xtopright = data[frame_skip*i][4]+ np.cos(data[frame_skip*i][6])*(+1.0)-np.sin(data[frame_skip*i][6])*(+1.0)
+    ytopright = data[frame_skip*i][5] + np.sin(data[frame_skip*i][6])*(+1.0)+np.cos(data[frame_skip*i][6])*(+1.0)
+    xbottomright = data[frame_skip*i][4]+ np.cos(data[frame_skip*i][6])*(+1.0)-np.sin(data[frame_skip*i][6])*(-1.0)
+    ybottomright = data[frame_skip*i][5] + np.sin(data[frame_skip*i][6])*(+1.0)+np.cos(data[frame_skip*i][6])*(-1.0)
+    xbottomleft = data[frame_skip*i][4]+ np.cos(data[frame_skip*i][6])*(-1.0)-np.sin(data[frame_skip*i][6])*(-1.0)
+    ybottomleft = data[frame_skip*i][5] + np.sin(data[frame_skip*i][6])*(-1.0)+np.cos(data[frame_skip*i][6])*(-1.0)
     objectpoints = [[xtopleft,ytopleft],[xtopright,ytopright],[xbottomright,ybottomright],[xbottomleft,ybottomleft]]
     rectangle = plt.Polygon(objectpoints, closed=True, fc='b', alpha=0.5)
     ax.add_patch(rectangle)
@@ -77,6 +77,8 @@ anim = animation.FuncAnimation(fig, animate,
                                frames=100, 
                                interval=100.0,
 			       blit = True)
+
+ax.set_aspect('equal')
 
 plt.show()
 

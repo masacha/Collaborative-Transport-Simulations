@@ -52,6 +52,8 @@ anim = animation.FuncAnimation(fig, animate,
                                interval=100.0,
                                blit=True)
 
+ax.set_aspect('equal')
+
 plt.show()
 
 #Writer = animation.writers['ffmpeg']

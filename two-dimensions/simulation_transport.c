@@ -24,11 +24,12 @@
 #define L_o	1.000 //meter
 
 //Friction from floor
-#define D_f	0.0
-#define D_f_rotation	0
+#define D_f	50.0
+#define D_f_rotation	100
 
 //Gains
 #define GDIS	500.0
+#define GROBOT  500.0
 #define K_p	10.0
 #define K_v	50.0
 #define M_c	1.0
@@ -73,7 +74,7 @@ int main(void)
 	double derr_y_left1 = 0.0;
 
 	double f_res_left1 = 0.0;
-	double tau_res_left1 = 0.0;
+	double integral_f_res_left1 = 0.0;
 
 /*Mobile Robot Inputs*/
 	
@@ -148,7 +149,7 @@ int main(void)
 	double derr_y_left2 = 0.0;
 
 	double f_res_left2 = 0.0;
-	double tau_res_left2 = 0.0;
+	double integral_f_res_left2 = 0.0;
 
 /*Mobile Robot Inputs*/
 	
@@ -223,7 +224,7 @@ int main(void)
 	double derr_y_right1 = 0.0;
 
 	double f_res_right1 = 0.0;
-	double tau_res_right1 = 0.0;
+	double integral_f_res_right1 = 0.0;
 
 /*Mobile Robot Inputs*/
 	
@@ -305,12 +306,12 @@ int main(void)
 			f_dis_left1 = 0.0;
 		}
 
-		tau_dis_left1_l = f_dis_left1*R_w*(1-sin(phi_res_left1-phi_o))/2 + D_r*dtheta_res_left1_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_left1_l+(M_r*R_r*R_r-J_r)*ddtheta_res_left1_r);
-		tau_dis_left1_r = f_dis_left1*R_w*(1+sin(phi_res_left1-phi_o))/2 + D_r*dtheta_res_left1_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_left1_l+(M_r*R_r*R_r+J_r)*ddtheta_res_left1_r);
+		tau_dis_left1_l = f_dis_left1*R_w/2 + D_r*dtheta_res_left1_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_left1_l+(M_r*R_r*R_r-J_r)*ddtheta_res_left1_r);
+		tau_dis_left1_r = f_dis_left1*R_w/2 + D_r*dtheta_res_left1_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_left1_l+(M_r*R_r*R_r+J_r)*ddtheta_res_left1_r);
 		
 		/*left1 Mobile Robot Controller*/
 
-		dv_ref_left1 = K_f*(f_left1_command-f_dis_left1);
+		dv_ref_left1 = K_f*(f_left1_command-f_res_left1);
 		dw_ref_left1 = 0.0;
 
 		/*left1 Motor Controller*/
@@ -360,12 +361,12 @@ int main(void)
 			f_dis_left2 = 0.0;
 		}
 		
-		tau_dis_left2_l = f_dis_left2*R_w*(1-sin(phi_res_left2-phi_o))/2 + D_r*dtheta_res_left2_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_left2_l+(M_r*R_r*R_r-J_r)*ddtheta_res_left2_r);
-		tau_dis_left2_r = f_dis_left2*R_w*(1+sin(phi_res_left2-phi_o))/2 + D_r*dtheta_res_left2_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_left2_l+(M_r*R_r*R_r+J_r)*ddtheta_res_left2_r);
+		tau_dis_left2_l = f_dis_left2*R_w/2 + D_r*dtheta_res_left2_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_left2_l+(M_r*R_r*R_r-J_r)*ddtheta_res_left2_r);
+		tau_dis_left2_r = f_dis_left2*R_w/2 + D_r*dtheta_res_left2_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_left2_l+(M_r*R_r*R_r+J_r)*ddtheta_res_left2_r);
 
 		/*left2 Mobile Robot Controller*/
 
-		dv_ref_left2 = K_f*(f_left2_command-f_dis_left2);
+		dv_ref_left2 = K_f*(f_left2_command-f_res_left2);
 		dw_ref_left2 = 0.0;
 
 		/*left2 Motor Controller*/
@@ -378,8 +379,8 @@ int main(void)
 		ia_left2_l = ia_ref_left2_l + tau_dob_left2_l/K_tn;
 		ia_left2_r = ia_ref_left2_r + tau_dob_left2_r/K_tn;
 
-		ddtheta_res_left2_l = (K_tn*ia_left2_l - tau_dis_left2_l)/J_n; //ajouter masse et inertie du robot ici
-		ddtheta_res_left2_r = (K_tn*ia_left2_r - tau_dis_left2_r)/J_n; //ajouter masse et inertie du robot ici
+		ddtheta_res_left2_l = (K_tn*ia_left2_l - tau_dis_left2_l)/J_n;
+		ddtheta_res_left2_r = (K_tn*ia_left2_r - tau_dis_left2_r)/J_n;
 
 		dtheta_res_left2_l += ddtheta_res_left2_l * ST;
 		dtheta_res_left2_r += ddtheta_res_left2_r * ST;
@@ -416,12 +417,12 @@ int main(void)
 			f_dis_right1 = 0.0;
 		}
 		
-		tau_dis_right1_l = f_dis_right1*R_w*(1-sin(phi_res_right1-phi_o))/2 + D_r*dtheta_res_right1_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_right1_l+(M_r*R_r*R_r-J_r)*ddtheta_res_right1_r);
-		tau_dis_right1_r = f_dis_right1*R_w*(1+sin(phi_res_right1-phi_o))/2 + D_r*dtheta_res_right1_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_right1_l+(M_r*R_r*R_r+J_r)*ddtheta_res_right1_r);
+		tau_dis_right1_l = f_dis_right1*R_w/2 + D_r*dtheta_res_right1_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_right1_l+(M_r*R_r*R_r-J_r)*ddtheta_res_right1_r);
+		tau_dis_right1_r = f_dis_right1*R_w/2 + D_r*dtheta_res_right1_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_right1_l+(M_r*R_r*R_r+J_r)*ddtheta_res_right1_r);
 
 		/*right1 Mobile Robot Controller*/
 
-		dv_ref_right1 = K_f*(f_right1_command-f_dis_right1);
+		dv_ref_right1 = K_f*(f_right1_command-f_res_right1);
 		dw_ref_right1 = 0.0;
 
 		/*right1 Motor Controller*/
@@ -460,15 +461,15 @@ int main(void)
 
 		/*Object Motion*/
 
-		ddx_o = (f_dis_left1*cos(phi_res_left1)+f_dis_left2*cos(phi_res_left2)+f_dis_right1*cos(phi_res_right1))/M_o - D_f*dx_o;
+		ddx_o = (f_dis_left1*cos(phi_o)+f_dis_left2*cos(phi_o)+f_dis_right1*cos(phi_o))/M_o - D_f*dx_o;
 		dx_o += ddx_o*ST;
 		x_o += dx_o*ST;
-		ddy_o = (f_dis_left1*sin(phi_res_left1)+f_dis_left2*sin(phi_res_left2)+f_dis_right1*sin(phi_res_right1))/M_o - D_f*dy_o;
+		ddy_o = (f_dis_left1*sin(phi_o)+f_dis_left2*sin(phi_o)+f_dis_right1*sin(phi_o))/M_o - D_f*dy_o;
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
-		ddphi_o = (f_dis_left1*(-sin(phi_res_left1)*(x_o-x_c_left1)+cos(phi_res_left1)*(y_o-y_c_left1))
-			+ f_dis_left2*(-sin(phi_res_left2)*(x_o-x_c_left2)+cos(phi_res_left2)*(y_o-y_c_left2))
-			+ f_dis_right1*(-sin(phi_res_right1)*(x_o-x_c_right1)+cos(phi_res_right1)*(y_o-y_c_right1))
+		ddphi_o = (f_dis_left1*(-sin(phi_o)*(x_o-x_c_left1)+cos(phi_o)*(y_o-y_c_left1))
+			+ f_dis_left2*(-sin(phi_o)*(x_o-x_c_left2)+cos(phi_o)*(y_o-y_c_left2))
+			+ f_dis_right1*(-sin(phi_o)*(x_o-x_c_right1)+cos(phi_o)*(y_o-y_c_right1))
 			)/J_o - D_f_rotation*dphi_o;
 		dphi_o += ddphi_o*ST;
 		phi_o += dphi_o*ST;
@@ -513,17 +514,16 @@ int main(void)
 		/*left1 reaction torque observer*/
 		tau_rtob_left1_l = integral_tau_rtob_left1_l - dtheta_res_left1_l*J_n*GDIS;
 		integral_tau_rtob_left1_l 
-			+= ((K_tn*ia_left1_l - D_r*dtheta_res_left1_l - ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_left1_l+(M_r*R_r*R_r-J_r)*ddtheta_res_left1_r) + dtheta_res_left1_l*J_n*GDIS) - integral_tau_rtob_left1_l)*GDIS*ST;
+			+= (K_tn*ia_left1_l - D_r*dtheta_res_left1_l + dtheta_res_left1_l*J_n*GDIS - integral_tau_rtob_left1_l)*GDIS*ST;
 		
 		tau_rtob_left1_r = integral_tau_rtob_left1_r - dtheta_res_left1_r*J_n*GDIS;
 		integral_tau_rtob_left1_r 
-			+= ((K_tn*ia_left1_r - D_r*dtheta_res_left1_r - ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_left1_l+(M_r*R_r*R_r+J_r)*ddtheta_res_left1_r) + dtheta_res_left1_r*J_n*GDIS) - integral_tau_rtob_left1_r)*GDIS*ST;
+			+= (K_tn*ia_left1_r - D_r*dtheta_res_left1_r + dtheta_res_left1_l*J_n*GDIS - integral_tau_rtob_left1_r)*GDIS*ST;
 
 		/*left1 Mobile Robot Reaction Force*/
 
-		f_res_left1 = (tau_rtob_left1_l+tau_rtob_left1_r)/R_w;
-		tau_res_left1 = (tau_rtob_left1_l-tau_rtob_left1_r)*R_r/(R_w);
-
+		f_res_left1 = integral_f_res_left1 - GROBOT*M_r*R_w*(dtheta_res_left1_l+dtheta_res_left1_r)/2;
+		integral_f_res_left1 += ((tau_rtob_left1_l+tau_rtob_left1_r)/R_w + GROBOT*M_r*R_w*(dtheta_res_left1_l+dtheta_res_left1_r)/2 - integral_f_res_left1)*GROBOT*ST;
 
 		/*left2 disturbance observer*/	
 		tau_dob_left2_l = integral_tau_dob_left2_l - dtheta_res_left2_l*J_n*GDIS;
@@ -537,16 +537,16 @@ int main(void)
 		/*left2 reaction torque observer*/
 		tau_rtob_left2_l = integral_tau_rtob_left2_l - dtheta_res_left2_l*J_n*GDIS;
 		integral_tau_rtob_left2_l 
-			+= ((K_tn*ia_left2_l - D_r*dtheta_res_left2_l - ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_left2_l+(M_r*R_r*R_r-J_r)*ddtheta_res_left2_r) + dtheta_res_left2_l*J_n*GDIS) - integral_tau_rtob_left2_l)*GDIS*ST;
+			+= (K_tn*ia_left2_l - D_r*dtheta_res_left2_l + dtheta_res_left2_l*J_n*GDIS - integral_tau_rtob_left2_l)*GDIS*ST;
 		
 		tau_rtob_left2_r = integral_tau_rtob_left2_r - dtheta_res_left2_r*J_n*GDIS;
 		integral_tau_rtob_left2_r 
-			+= ((K_tn*ia_left2_r - D_r*dtheta_res_left2_r - ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_left2_l+(M_r*R_r*R_r+J_r)*ddtheta_res_left2_r) + dtheta_res_left2_r*J_n*GDIS) - integral_tau_rtob_left2_r)*GDIS*ST;
+			+= (K_tn*ia_left2_r - D_r*dtheta_res_left2_r + dtheta_res_left2_l*J_n*GDIS - integral_tau_rtob_left2_r)*GDIS*ST;
 
 		/*left2 Mobile Robot Reaction Force*/
 
-		f_res_left2 = (tau_dob_left2_l+tau_dob_left2_r)/R_w;
-		tau_res_left2 = (tau_dob_left2_l-tau_dob_left2_r)*R_r/(R_w);
+		f_res_left2 = integral_f_res_left2 - GROBOT*M_r*R_w*(dtheta_res_left2_l+dtheta_res_left2_r)/2;
+		integral_f_res_left2 += ((tau_rtob_left2_l+tau_rtob_left2_r)/R_w + GROBOT*M_r*R_w*(dtheta_res_left2_l+dtheta_res_left2_r)/2 - integral_f_res_left2)*GROBOT*ST;
 
 		/*right1 disturbance observer*/	
 		tau_dob_right1_l = integral_tau_dob_right1_l - dtheta_res_right1_l*J_n*GDIS;
@@ -560,18 +560,18 @@ int main(void)
 		/*right1 reaction torque observer*/
 		tau_rtob_right1_l = integral_tau_rtob_right1_l - dtheta_res_right1_l*J_n*GDIS;
 		integral_tau_rtob_right1_l 
-			+= ((K_tn*ia_right1_l - D_r*dtheta_res_right1_l - ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_right1_l+(M_r*R_r*R_r-J_r)*ddtheta_res_right1_r) + dtheta_res_right1_l*J_n*GDIS) - integral_tau_rtob_right1_l)*GDIS*ST;
+			+= (K_tn*ia_right1_l - D_r*dtheta_res_right1_l + dtheta_res_right1_l*J_n*GDIS - integral_tau_rtob_right1_l)*GDIS*ST;
 		
 		tau_rtob_right1_r = integral_tau_rtob_right1_r - dtheta_res_right1_r*J_n*GDIS;
 		integral_tau_rtob_right1_r 
-			+= ((K_tn*ia_right1_r - D_r*dtheta_res_right1_r - ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_right1_l+(M_r*R_r*R_r+J_r)*ddtheta_res_right1_r) + dtheta_res_right1_r*J_n*GDIS) - integral_tau_rtob_right1_r)*GDIS*ST;
+			+= (K_tn*ia_right1_r - D_r*dtheta_res_right1_r + dtheta_res_right1_l*J_n*GDIS - integral_tau_rtob_right1_r)*GDIS*ST;
 
 		/*right1 Mobile Robot Reaction Force*/
 
-		f_res_right1 = (tau_dob_right1_l+tau_dob_right1_r)/R_w;
-		tau_res_right1 = (tau_dob_right1_l-tau_dob_right1_r)*R_r/(R_w);
+		f_res_right1 = integral_f_res_right1 - GROBOT*M_r*R_w*(dtheta_res_right1_l+dtheta_res_right1_r)/2;
+		integral_f_res_right1 += ((tau_rtob_right1_l+tau_rtob_right1_r)/R_w + GROBOT*M_r*R_w*(dtheta_res_right1_l+dtheta_res_right1_r)/2 - integral_f_res_right1)*GROBOT*ST;
 
-		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_o, y_o, phi_o, x_res_left1, y_res_left1, phi_res_left1, f_dis_left1, x_res_right1, y_res_right1, phi_res_right1, f_dis_right1, x_res_left2, y_res_left2, phi_res_left2, f_dis_left2);
+		fprintf(fp, " %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n", t, x_o, y_o, phi_o, x_res_left1, y_res_left1, phi_res_left1, f_dis_left1, x_res_right1, y_res_right1, phi_res_right1, f_dis_right1, x_res_left2, y_res_left2, phi_res_left2, f_dis_left2, f_res_left1, f_res_left2, f_res_right1);
 		
 		t += ST;
 		firstRound = 0;

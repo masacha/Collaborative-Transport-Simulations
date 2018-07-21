@@ -3,26 +3,39 @@
 
 #define	T	10 //seconds
 #define ST	0.0001 //second
-#define GDIS	500.0
-#define K_p	10.0
-#define K_v	10.0
-#define M_c	1.0
-#define K_f	1.0
+#define Pi	3.1415
+
+//Wheel parameters
+#define K_tn	0.43   //Nm
+#define J_n	0.01 //Ns^2/m
+#define D_r	0.06
+
+//Robot parameters
+#define R_w	0.033 //meter
+#define R_r	0.08 //meter
+#define M_r	1.0 //kg
+#define J_r	0.0032
+
+//Object parameters
 #define K_o	1000.0 //N/m
 #define D_o	1.0
 #define M_o	3.0 //kg
 #define J_o	2.0
 #define L_o	1.000 //meter
-#define R_w	0.033 //meter
-#define R_r	0.08 //meter
-#define K_tn	1.7   //Nm
-#define J_n	0.1 //Ns^2/m
-#define Pi	3.1415
+
+//Friction from floor
 #define D_f	50.0
 #define D_f_rotation	100
-#define M_r	1.0 //kg
-#define J_r	0.0032
-#define D_r	1.0
+
+//Gains
+#define GDIS	500.0
+#define K_p	10.0
+#define K_v	50.0
+#define M_c	1.0
+#define K_f	1.0
+#define K_phi	5000.0
+#define K_dphi	50.0
+#define K_intphi	0.2
 
 int main(void)
 {
@@ -202,14 +215,13 @@ int main(void)
 
 		if(cos(phi_o)*(y_c_bottom-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_bottom-x_o-sin(phi_o)*L_o)>0){
 			f_dis_bottom = K_o*l_bottom + D_o*dl_bottom; 
-			tau_dis_bottom_l = f_dis_bottom*R_w*(1-sin(phi_res_bottom-phi_o))/2 + (R_w*R_w/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_bottom_r+(M_r*R_r*R_r-J_r)*ddtheta_res_bottom_l);//+D_r*dtheta_res_bottom_l;
-			tau_dis_bottom_r = f_dis_bottom*R_w*(1+sin(phi_res_bottom-phi_o))/2 + (R_w*R_w/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_bottom_r+(M_r*R_r*R_r+J_r)*ddtheta_res_bottom_l);//+D_r*dtheta_res_bottom_r;
 		}
 		else{
 			f_dis_bottom = 0.0;
-			tau_dis_bottom_l = 0.0;
-			tau_dis_bottom_r = 0.0;
 		}
+		
+		tau_dis_bottom_l = f_dis_bottom*R_w*(1-sin(phi_res_bottom-phi_o))/2 + D_r*dtheta_res_bottom_l + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r+J_r)*ddtheta_res_bottom_l+(M_r*R_r*R_r-J_r)*ddtheta_res_bottom_r);
+		tau_dis_bottom_r = f_dis_bottom*R_w*(1+sin(phi_res_bottom-phi_o))/2 + D_r*dtheta_res_bottom_r + ((R_w*R_w)/(4*R_r*R_r))*((M_r*R_r*R_r-J_r)*ddtheta_res_bottom_l+(M_r*R_r*R_r+J_r)*ddtheta_res_bottom_r);
 	
 		ddx_res_bottom = R_w*(ddtheta_res_bottom_l+ddtheta_res_bottom_r)*cos(phi_res_bottom)/2;
 		dx_res_bottom += ddx_res_bottom*ST;
@@ -231,13 +243,14 @@ int main(void)
 		else{
 			reaction_wall = 0.0;
 		}
-		ddx_o = (f_dis_bottom)*cos(phi_res_bottom)/M_o - D_f*dx_o + sin(phi_o)*reaction_wall;
+
+		ddx_o = (f_dis_bottom)*cos(phi_o)/M_o - D_f*dx_o + sin(phi_o)*reaction_wall;
 		dx_o += ddx_o*ST;
 		x_o += dx_o*ST;
-		ddy_o = (f_dis_bottom)*sin(phi_res_bottom)/M_o - D_f*dy_o - cos(phi_o)*reaction_wall;
+		ddy_o = (f_dis_bottom)*sin(phi_o)/M_o - D_f*dy_o - cos(phi_o)*reaction_wall;
 		dy_o += ddy_o*ST;
 		y_o += dy_o*ST;
-		ddphi_o = -f_dis_bottom*(cos(phi_res_bottom)*(x_o-x_c_bottom)+sin(phi_res_bottom)*(y_o-y_c_bottom))/J_o - D_f_rotation*dphi_o 
+		ddphi_o = -f_dis_bottom*(cos(phi_o)*(x_o-x_c_bottom)+sin(phi_o)*(y_o-y_c_bottom))/J_o - D_f_rotation*dphi_o 
 			+ reaction_wall*(cos(phi_o)*(x_o-x_wall)+sin(phi_o)*(y_o-y_wall));
 		dphi_o += ddphi_o*ST;
 		phi_o += dphi_o*ST;
