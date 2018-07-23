@@ -20,7 +20,7 @@ left2 = plt.Circle((5, -5), 0.08, fc='pink', alpha=0.5)
 left2front = plt.Circle((5, -5), 0.01, fc='black', alpha=0.5)
 left3 = plt.Circle((5, -5), 0.08, fc='brown', alpha=0.5)
 left3front = plt.Circle((5, -5), 0.01, fc='black', alpha=0.5)
-wall = plt.Circle((data[0][16], data[0][17]), 0.05, fc='black')
+wall = plt.Polygon([[data[0][16], data[0][17]],[data[0][16],4]],fc='black')
 objectpoints = [[-1.0,1.0],[1.0,1.0],[1.0,-1.0],[-1.0,-1.0]]
 rectangle = plt.Polygon(objectpoints, closed=True, fc='b')
 
