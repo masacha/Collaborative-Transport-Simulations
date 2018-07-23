@@ -37,12 +37,15 @@
 #define K_fc	50.0
 #define M_c	1.0
 #define K_f	0.5
-#define K_phi	50.0
+#define K_phi	1.0
 #define K_dphi	0.0
-#define K_intphi	100.0
+#define K_intphi	1.0
 #define K_pv	15.0
 #define K_iv	0.0
 #define K_dv	0.0
+#define K_pw 	1.0
+#define K_ro	0.1
+#define K_alpha	0.15
 
 #define F_LIMIT	10.0
 
@@ -51,7 +54,7 @@
 #define GOTOGOAL	2
 #define AVOIDOBSTACLE	3
 
-#define	COMPLIANT	0
+#define COMPLIANT	0
 #define VELOCITY	1
 #define FORCE		2
 
@@ -64,15 +67,27 @@ int main(void)
 	int behaviour = 0;
 	double total_cmd_force = 0.0;
 
+	double v_o_max = 0.05;
+	double w_o_max = Pi/(2*30);
+
+	double err_phi = 0.0;
+	double pre_err_phi = 0.0;
+	double err_int_phi = 0.0;
+	double err_der_phi = 0.0;
+
 /*LEFT1*/
 /*Reference Commands*/
 
-	int control_mode_left1 = COMPLIANT;
-	int pre_control_mode_left1 = COMPLIANT;
+	int control_mode_left1 = VELOCITY;
+	int pre_control_mode_left1 = VELOCITY;
 	double f_cmd_left1 = 0.0;
 	double x_cmd_left1 = 0.0;
 	double v_cmd_left1 = 0.0;
+	double w_cmd_left1 = 0.0;
 	double phi_cmd_left1 = 0.0;
+
+	double x_goal_left1 = 0.0;
+	double y_goal_left1 = 0.0;
 
 /*Mobile Robot Outputs*/
 
@@ -162,12 +177,16 @@ int main(void)
 /*LEFT2*/
 /*Reference Commands*/
 
-	int control_mode_left2 = COMPLIANT;
-	int pre_control_mode_left2 = COMPLIANT;
+	int control_mode_left2 = VELOCITY;
+	int pre_control_mode_left2 = VELOCITY;
 	double f_cmd_left2 = 0.0;
 	double x_cmd_left2 = 0.0;
 	double v_cmd_left2 = 0.0;
+	double w_cmd_left2 = 0.0;
 	double phi_cmd_left2 = 0.0;
+
+	double x_goal_left2 = 0.0;
+	double y_goal_left2 = 0.0;
 
 /*Mobile Robot Outputs*/
 
@@ -256,12 +275,16 @@ int main(void)
 /*right1*/
 /*Reference Commands*/
 
-	int control_mode_right1 = COMPLIANT;
-	int pre_control_mode_right1 = COMPLIANT;
+	int control_mode_right1 = VELOCITY;
+	int pre_control_mode_right1 = VELOCITY;
 	double f_cmd_right1 = 0.0;
 	double x_cmd_right1 = 0.0;
 	double v_cmd_right1 = 0.0;
+	double w_cmd_right1 = 0.0;
 	double phi_cmd_right1 = 0.0;
+
+	double x_goal_right1 = 0.0;
+	double y_goal_right1 = 0.0;
 	
 	double reaction_wall_right1 = 0.0;
 
@@ -352,6 +375,16 @@ int main(void)
 
 
 /*OBJECT*/
+	double x_goal = 1.0;
+	double y_goal = 1.0;
+
+	double v_ref_o = 0.0;
+	double w_ref_o = 0.0;
+	double x_ref_o = 0.0;
+	double y_ref_o = 0.0;
+	double phi_ref_o = 0.0;
+	double time_to_goal = 0.0;
+	
 	double x_o = 0.0;
 	double dx_o = 0.0;
 	double ddx_o = 0.0;
@@ -385,7 +418,7 @@ int main(void)
 		/*if (f_dis_left1 + f_dis_left2 + f_dis_right1>F_LIMIT){
 			behaviour = AVOIDOBSTACLE;	
 			total_cmd_force = 5.0;	
-		}*/
+		}
 
 		if (behaviour==GOTOOBJECT && (f_dis_left1 != 0.0 || f_dis_left2 != 0.0 || f_dis_right1 != 0.0)){
 			behaviour = GRASP;
@@ -393,6 +426,24 @@ int main(void)
 
 		if (behaviour == GRASP && fabs(f_cmd_left1-f_dis_left1)<0.01 && fabs(f_cmd_left2-f_dis_left2)<0.01 && fabs(f_cmd_right1-f_dis_right1)<0.01 && fabs(v_res_left1)<0.001 && fabs(v_res_left2)<0.001 && fabs(v_res_right1)<0.001){
 			behaviour = GOTOGOAL;
+			v_ref_o = 0.1;
+			time_to_goal = sqrt((x_goal-x_o)*(x_goal-x_o)+(y_goal-y_o)*(y_goal-y_o))/v_ref_o;
+			w_ref_o = (atan2(y_goal-y_o,x_goal-x_o)-phi_o)/time_to_goal;
+			double t_start = t;
+		
+			x_goal_left1 = x_goal + cos(w_ref_o*time_to_goal)*(x_res_left1-x_o)-sin(w_ref_o*time_to_goal)*(y_res_left1-y_o);
+			y_goal_left1 = y_goal + sin(w_ref_o*time_to_goal)*(x_res_left1-x_o)+cos(w_ref_o*time_to_goal)*(y_res_left1-y_o);
+			x_goal_left2 = x_goal + cos(w_ref_o*time_to_goal)*(x_res_left2-x_o)-sin(w_ref_o*time_to_goal)*(y_res_left2-y_o);
+			y_goal_left2 = y_goal + sin(w_ref_o*time_to_goal)*(x_res_left2-x_o)+cos(w_ref_o*time_to_goal)*(y_res_left2-y_o);
+			x_goal_right1 = x_goal + cos(w_ref_o*time_to_goal)*(x_res_right1-x_o)-sin(w_ref_o*time_to_goal)*(y_res_right1-y_o);
+			y_goal_right1 = y_goal + sin(w_ref_o*time_to_goal)*(x_res_right1-x_o)+cos(w_ref_o*time_to_goal)*(y_res_right1-y_o);
+
+			v_cmd_left1 = sqrt((x_goal_left1 - x_res_left1)*(x_goal_left1 - x_res_left1)+(y_goal_left1 - y_res_left1)*(y_goal_left1 - y_res_left1))/time_to_goal;
+			w_cmd_left1 = (atan2(y_goal_left1-y_res_left1,x_goal_left1-x_res_left1)-phi_res_left1)/time_to_goal;
+			v_cmd_left2 = sqrt((x_goal_left2 - x_res_left2)*(x_goal_left2 - x_res_left2)+(y_goal_left2 - y_res_left2)*(y_goal_left2 - y_res_left2))/time_to_goal;
+			w_cmd_left2 = (atan2(y_goal_left2-y_res_left2,x_goal_left2-x_res_left2)-phi_res_left2)/time_to_goal;
+			v_cmd_right1 = sqrt((x_goal_right1 - x_res_right1)*(x_goal_right1 - x_res_right1)+(y_goal_right1 - y_res_right1)*(y_goal_right1 - y_res_right1))/time_to_goal;
+			w_cmd_right1 = (atan2(y_goal_right1-y_res_right1,x_goal_right1-x_res_right1)-phi_res_right1)/time_to_goal;
 		}
 
 		if (behaviour==GOTOOBJECT){
@@ -415,16 +466,7 @@ int main(void)
 			control_mode_left1 = VELOCITY;
 			control_mode_left2 = VELOCITY;
 			control_mode_right1 = VELOCITY;
-			v_cmd_left1 = 0.01;
-			v_cmd_left2 = 0.01;
-			v_cmd_right1 = 0.01;
-		}
-			/*control_mode_left1 = FORCE;
-			control_mode_left2 = FORCE;
-			control_mode_right1 = VELOCITY;
-			f_cmd_left1 = 2.5-K_phi*(phi_ref_o-phi_o);
-			f_cmd_left2 = 2.5+K_phi*(phi_ref_o-phi_o);
-		}
+					
 		else if (behaviour==AVOIDOBSTACLE && t-tavoid<5){
 			control_mode_left1 = VELOCITY;
 			control_mode_left2 = VELOCITY;
@@ -447,6 +489,13 @@ int main(void)
 			control_mode_right1 = VELOCITY;
 		}*/
 
+		v_cmd_left1 = 0.02;
+		w_cmd_left1 = 2*Pi/60;
+		v_cmd_left2 = 0.02;
+		w_cmd_left2 = 2*Pi/60;
+		v_cmd_right1 = 0.02;
+		w_cmd_right1 = 2*Pi/60;
+		
 
 		/*left1*/
 		
@@ -454,7 +503,7 @@ int main(void)
 		y_c_left1 = y_res_left1 + sin(phi_o)*R_r+cos(phi_o)*(0.0);
 
 		if(cos(phi_o)*(x_c_left1-x_o+cos(phi_o)*L_o)+sin(phi_o)*(y_c_left1-y_o+sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_left1-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_left1-x_o-sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_left1-y_o-cos(phi_o)*L_o)-sin(phi_o)*(x_c_left1-x_o+sin(phi_o)*L_o)<0){
-			f_dis_left1 = K_o*l_left1 + D_o*dl_left1; 
+			f_dis_left1 = 0.0;//K_o*l_left1 + D_o*dl_left1; 
 		}
 		else{
 			f_dis_left1 = 0.0;
@@ -484,14 +533,9 @@ int main(void)
 			err_der_vel_left1 = (err_vel_left1 - pre_err_vel_left1)/ST;
 			pre_err_vel_left1 = err_vel_left1;
 			dv_ref_left1 = K_pv*err_vel_left1 + K_iv*err_int_vel_left1 + K_dv*err_der_vel_left1;
-			dw_ref_left1 = 0.0;
+			dw_ref_left1 = K_pw*(w_cmd_left1-dphi_res_left1);
 		}
 		else if (control_mode_left1 == FORCE){
-			err_phi_left1 = phi_o;
-			err_int_phi_left1 += err_phi_left1*ST;
-			err_der_phi_left1 = (err_phi_left1 - pre_err_phi_left1)/ST;
-			pre_err_phi_left1 = err_phi_left1;
-			f_cmd_left1 += 0.0;//K_phi*err_phi_left1 + K_intphi*err_int_phi_left1 + K_dphi*err_der_phi_left1;
 			dv_ref_left1 = K_f*(f_cmd_left1-f_dis_left1);
 			dw_ref_left1 = 0.001*(phi_cmd_left1-phi_res_left1);
 		}
@@ -527,11 +571,11 @@ int main(void)
 		w_res_left1 += dw_res_left1*ST;
 
 		ddx_res_left1 = dv_res_left1*cos(phi_res_left1);
-		dx_res_left1 += ddx_res_left1*ST;
+		dx_res_left1 = v_res_left1*cos(phi_res_left1);
 		x_res_left1 += dx_res_left1*ST;
 
 		ddy_res_left1 = dv_res_left1*sin(phi_res_left1);
-		dy_res_left1 += ddy_res_left1*ST;
+		dy_res_left1 = v_res_left1*sin(phi_res_left1);
 		y_res_left1 += dy_res_left1*ST;
 
 		ddphi_res_left1 = dw_res_left1;
@@ -544,7 +588,7 @@ int main(void)
 		y_c_left2 = y_res_left2 + sin(phi_o)*R_r+cos(phi_o)*(0.0);
 
 		if(cos(phi_o)*(x_c_left2-x_o+cos(phi_o)*L_o)+sin(phi_o)*(y_c_left2-y_o+sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_left2-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_left2-x_o-sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_left2-y_o-cos(phi_o)*L_o)-sin(phi_o)*(x_c_left2-x_o+sin(phi_o)*L_o)<0){
-			f_dis_left2 = K_o*l_left2 + D_o*dl_left2; 
+			f_dis_left2 = 0.0;//K_o*l_left2 + D_o*dl_left2; 
 		}
 		else{
 			f_dis_left2 = 0.0;
@@ -574,14 +618,9 @@ int main(void)
 			err_der_vel_left2 = (err_vel_left2 - pre_err_vel_left2)/ST;
 			pre_err_vel_left2 = err_vel_left2;
 			dv_ref_left2 = K_pv*err_vel_left2 + K_iv*err_int_vel_left2 + K_dv*err_der_vel_left2;
-			dw_ref_left2 = 0.0;
+			dw_ref_left2 = K_pw*(w_cmd_left2-dphi_res_left2);
 		}
 		else if (control_mode_left2 == FORCE){
-			err_phi_left2 = phi_o;
-			err_int_phi_left2 += err_phi_left2*ST;
-			err_der_phi_left2 = (err_phi_left2 - pre_err_phi_left2)/ST;
-			pre_err_phi_left2 = err_phi_left2;
-			f_cmd_left2 -= 0.0;//K_phi*err_phi_left2 + K_intphi*err_int_phi_left2 + K_dphi*err_der_phi_left2;
 			dv_ref_left2 = K_f*(f_cmd_left2-f_dis_left2);
 			dw_ref_left2 = 0.001*(phi_cmd_left2-phi_res_left2);
 		}
@@ -616,11 +655,11 @@ int main(void)
 		w_res_left2 += dw_res_left2*ST;
 
 		ddx_res_left2 = dv_res_left2*cos(phi_res_left2);
-		dx_res_left2 += ddx_res_left2*ST;
+		dx_res_left2  = v_res_left2*cos(phi_res_left2);
 		x_res_left2 += dx_res_left2*ST;
 
 		ddy_res_left2 = dv_res_left2*sin(phi_res_left2);
-		dy_res_left2 += ddy_res_left2*ST;
+		dy_res_left2 = v_res_left2*sin(phi_res_left2);
 		y_res_left2 += dy_res_left2*ST;
 
 		ddphi_res_left2 = dw_res_left2;
@@ -633,7 +672,7 @@ int main(void)
 		y_c_right1 = y_res_right1 - sin(phi_o)*R_r+cos(phi_o)*(0.0);
 
 		if(cos(phi_o)*(x_c_right1-x_o-cos(phi_o)*L_o)+sin(phi_o)*(y_c_right1-y_o-sin(phi_o)*L_o)<0 && cos(phi_o)*(y_c_right1-y_o+cos(phi_o)*L_o)-sin(phi_o)*(x_c_right1-x_o-sin(phi_o)*L_o)>0 && cos(phi_o)*(y_c_right1-y_o-cos(phi_o)*L_o)-sin(phi_o)*(x_c_right1-x_o+sin(phi_o)*L_o)<0){
-			f_dis_right1 = -(K_o*l_right1 + D_o*dl_right1); 
+			f_dis_right1 = 0.0;-(K_o*l_right1 + D_o*dl_right1); 
 		}
 		else{
 			f_dis_right1 = 0.0;
@@ -670,14 +709,9 @@ int main(void)
 			err_der_vel_right1 = (err_vel_right1 - pre_err_vel_right1)/ST;
 			pre_err_vel_right1 = err_vel_right1;
 			dv_ref_right1 = K_pv*err_vel_right1 + K_iv*err_int_vel_right1 + K_dv*err_der_vel_right1;
-			dw_ref_right1 = 0.0;
+			dw_ref_right1 = K_pw*(w_cmd_right1-dphi_res_right1);
 		}
 		else if (control_mode_right1 == FORCE){
-			err_phi_right1 = phi_o;
-			err_int_phi_right1 += err_phi_right1*ST;
-			err_der_phi_right1 = (err_phi_right1 - pre_err_phi_right1)/ST;
-			pre_err_phi_right1 = err_phi_right1;
-			f_cmd_right1 -= 0.0;//K_phi*err_phi_right1 + K_intphi*err_int_phi_right1 + K_dphi*err_der_phi_right1;
 			dv_ref_right1 = K_f*(f_cmd_right1-f_dis_right1);
 			dw_ref_right1 = 0.001*(phi_cmd_right1-phi_res_right1);
 		}
@@ -712,11 +746,11 @@ int main(void)
 		w_res_right1 += dw_res_right1*ST;
 
 		ddx_res_right1 = dv_res_right1*cos(phi_res_right1);
-		dx_res_right1 += ddx_res_right1*ST;
+		dx_res_right1 = v_res_right1*cos(phi_res_right1);
 		x_res_right1 += dx_res_right1*ST;
 
 		ddy_res_right1 = dv_res_right1*sin(phi_res_right1);
-		dy_res_right1 += ddy_res_right1*ST;
+		dy_res_right1  = v_res_right1*sin(phi_res_right1);
 		y_res_right1 += dy_res_right1*ST;
 
 		ddphi_res_right1 = dw_res_right1;
