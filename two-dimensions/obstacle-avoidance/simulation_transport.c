@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define	T	60 //seconds
+#define	T	120 //seconds
 #define ST	0.0001 //second
 #define Pi	3.1415
 
@@ -50,14 +50,17 @@
 #define K_dv	0.0
 #define K_pw 	1.0
 #define K_ro	0.1
-#define K_alpha	0.15
+#define K_alpha	0.1
 
-#define F_LIMIT	15.0
+#define F_LIMIT	25.0
 
 #define GOTOOBJECT	0
 #define GRASP		1
 #define GOTOGOAL	2
-#define AVOIDOBSTACLE	3
+#define AVOIDOBSTACLE1	3
+#define AVOIDOBSTACLE2	4
+#define RELEASE		5
+#define GOTOGOAL2	6
 
 #define COMPLIANT	0
 #define VELOCITY	1
@@ -95,8 +98,10 @@ int main(void)
 	double w_cmd_left1 = 0.0;
 	double phi_cmd_left1 = 0.0;
 
-	double x_goal_left1 = 0.0;
-	double y_goal_left1 = 0.0;
+	double x_ref_left1 = 0.0;
+	double y_ref_left1 = 0.0;
+	double ro_left1 = 0.0;
+	double alpha_left1 = 0.0;
 
 /*Mobile Robot Outputs*/
 
@@ -199,8 +204,10 @@ int main(void)
 	double w_cmd_left2 = 0.0;
 	double phi_cmd_left2 = 0.0;
 
-	double x_goal_left2 = 0.0;
-	double y_goal_left2 = 0.0;
+	double x_ref_left2 = 0.0;
+	double y_ref_left2 = 0.0;
+	double ro_left2 = 0.0;
+	double alpha_left2 = 0.0;
 
 /*Mobile Robot Outputs*/
 
@@ -302,8 +309,10 @@ int main(void)
 	double w_cmd_right1 = 0.0;
 	double phi_cmd_right1 = 0.0;
 
-	double x_goal_right1 = 0.0;
-	double y_goal_right1 = 0.0;
+	double x_ref_right1 = 0.0;
+	double y_ref_right1 = 0.0;
+	double ro_right1 = 0.0;
+	double alpha_right1 = 0.0;
 	
 	double reaction_wall_right1 = 0.0;
 
@@ -404,9 +413,9 @@ int main(void)
 
 	double v_ref_o = 0.0;
 	double w_ref_o = 0.0;
-	double x_ref_o = 0.0;
-	double y_ref_o = 0.0;
-	double phi_ref_o = 0.0;
+	double x_o_ref = 0.0;
+	double y_o_ref = 0.0;
+	double phi_o_ref = 0.0;
 	double time_to_goal = 0.0;
 	
 	double x_o = 0.0;
@@ -421,7 +430,7 @@ int main(void)
 	double ddphi_o = 0.0;
 
 	double x_wall = 2.5;
-	double y_wall = -1.0;
+	double y_wall = -0.25;
 
 	double reaction_wall = 0.0;
 	double l_wall = 0.0;
@@ -447,10 +456,28 @@ int main(void)
 			v_ref_o = 0.05;
 			w_ref_o = 0.00;
 			t_start = t;
+			x_o_ref = x_o + v_ref_o*cos(phi_o + w_ref_o/K_alpha)/K_ro;
+			y_o_ref = y_o + v_ref_o*sin(phi_o + w_ref_o/K_alpha)/K_ro;
+			phi_o_ref = phi_o + w_ref_o/K_alpha;
 		}
 		else if (behaviour == GOTOGOAL && f_res_right1+f_res_left1+f_res_left2>F_LIMIT){
-			behaviour = AVOIDOBSTACLE;
+			behaviour = AVOIDOBSTACLE1;
+			v_ref_o = -0.05;
+			w_ref_o = 0;
 			t_avoid = t;
+		}
+		else if (behaviour == AVOIDOBSTACLE1 && t-t_avoid >= 20.0){
+			behaviour = AVOIDOBSTACLE2;
+			v_ref_o = 0.05;
+			w_ref_o = -Pi/(8*60);
+			t_start = t;
+			x_o_ref = x_o + v_ref_o*cos(phi_o + w_ref_o/K_alpha)/K_ro;
+			y_o_ref = y_o + v_ref_o*sin(phi_o + w_ref_o/K_alpha)/K_ro;
+			phi_o_ref = phi_o + w_ref_o/K_alpha;
+			t_avoid = t;
+		}
+		else if (behaviour == AVOIDOBSTACLE2 && t-t_avoid >= 20.0){
+			behaviour = GOTOGOAL2;
 		}
 
 		if (behaviour==GOTOOBJECT){
@@ -470,50 +497,82 @@ int main(void)
 			f_cmd_right1 = -5.0;
 		}
 		else if (behaviour==GOTOGOAL){
-			control_mode_left1 = FORCE;
-			control_mode_left2 = FORCE;
+			control_mode_left1 = VELOCITY;
+			control_mode_left2 = VELOCITY;
 			control_mode_right1 = VELOCITY;
-			if (f_dis_left1>0){
-				f_cmd_left1 = 5.0;
-			}else{
-				f_cmd_left1 = 5.0;
-			}
-			if (f_dis_left2>0){
-				f_cmd_left2 = 5.0;
-			}else{
-				f_cmd_left2 = 5.0;
-			}
+			x_o_ref += v_ref_o*cos(phi_o_ref)*ST;
+			y_o_ref += v_ref_o*sin(phi_o_ref)*ST;
+			phi_o_ref += w_ref_o*ST;
+			x_ref_left1 = x_o_ref + cos(phi_o_ref)*(-L_o-R_r)-sin(phi_o_ref)*(0.6);
+			y_ref_left1 = y_o_ref + sin(phi_o_ref)*(-L_o-R_r)+cos(phi_o_ref)*(0.6);
+			ro_left1 = sqrt((x_ref_left1-x_res_left1)*(x_ref_left1-x_res_left1)+(y_ref_left1-y_res_left1)*(y_ref_left1-y_res_left1));
+			alpha_left1 = - (phi_res_left1) + atan2(y_ref_left1-y_res_left1,x_ref_left1-x_res_left1);
+			x_ref_left2 = x_o_ref + cos(phi_o_ref)*(-L_o-R_r)-sin(phi_o_ref)*(-0.6);
+			y_ref_left2 = y_o_ref + sin(phi_o_ref)*(-L_o-R_r)+cos(phi_o_ref)*(-0.6);
+			ro_left2 = sqrt((x_ref_left2-x_res_left2)*(x_ref_left2-x_res_left2)+(y_ref_left2-y_res_left2)*(y_ref_left2-y_res_left2));
+			alpha_left2 = - (phi_res_left2) + atan2(y_ref_left2-y_res_left2,x_ref_left2-x_res_left2);
+			x_ref_right1 = x_o_ref + cos(phi_o_ref)*(+L_o+R_r/2)-sin(phi_o_ref)*(0.0);
+			y_ref_right1 = y_o_ref + sin(phi_o_ref)*(+L_o+R_r)+cos(phi_o_ref)*(0.0);
+			ro_right1 = sqrt((x_ref_right1-x_res_right1)*(x_ref_right1-x_res_right1)+(y_ref_right1-y_res_right1)*(y_ref_right1-y_res_right1));
+			alpha_right1 = - (phi_res_right1) + atan2(y_ref_right1-y_res_right1,x_ref_right1-x_res_right1);
+
+			v_cmd_left1 = K_ro*ro_left1;
+			w_cmd_left1 = K_alpha*alpha_left1;
+			v_cmd_left2 = K_ro*ro_left2;
+			w_cmd_left2 = K_alpha*alpha_left2;
+			v_cmd_right1 = K_ro*ro_right1;
+			w_cmd_right1 = K_alpha*alpha_right1;
+		}
+		else if (behaviour==AVOIDOBSTACLE1 && t-t_avoid<20.0){
+			control_mode_left1 = VELOCITY;
+			control_mode_left2 = VELOCITY;
+			control_mode_right1 = VELOCITY;
+
+			v_cmd_left1 = v_ref_o;
+			w_cmd_left1 = 0.0;
+			v_cmd_left2 = v_ref_o;
+			w_cmd_left2 = 0.0;
 			v_cmd_right1 = v_ref_o;
-			w_cmd_left1 = w_ref_o;
-			w_cmd_left2 = w_ref_o;
-			w_cmd_right1 = w_ref_o;
+			w_cmd_right1 =0.0;
 		}
-		else if (behaviour==AVOIDOBSTACLE && t-t_avoid<2.5){
+		else if (behaviour==AVOIDOBSTACLE2 && t-t_avoid < 20.0){			
 			control_mode_left1 = VELOCITY;
 			control_mode_left2 = VELOCITY;
 			control_mode_right1 = VELOCITY;
-			v_cmd_left1 = -0.1*(t-t_avoid)/2.5;
-			v_cmd_left2 = -0.1*(t-t_avoid)/2.5;
-			v_cmd_right1 = -0.1*(t-t_avoid)/2.5;
+			x_o_ref += v_ref_o*cos(phi_o_ref)*ST;
+			y_o_ref += v_ref_o*sin(phi_o_ref)*ST;
+			phi_o_ref += w_ref_o*ST;
+			x_ref_left1 = x_o_ref + cos(phi_o_ref)*(-L_o-R_r)-sin(phi_o_ref)*(0.6);
+			y_ref_left1 = y_o_ref + sin(phi_o_ref)*(-L_o-R_r)+cos(phi_o_ref)*(0.6);
+			ro_left1 = sqrt((x_ref_left1-x_res_left1)*(x_ref_left1-x_res_left1)+(y_ref_left1-y_res_left1)*(y_ref_left1-y_res_left1));
+			alpha_left1 = - (phi_res_left1) + atan2(y_ref_left1-y_res_left1,x_ref_left1-x_res_left1);
+			x_ref_left2 = x_o_ref + cos(phi_o_ref)*(-L_o-R_r)-sin(phi_o_ref)*(-0.6);
+			y_ref_left2 = y_o_ref + sin(phi_o_ref)*(-L_o-R_r)+cos(phi_o_ref)*(-0.6);
+			ro_left2 = sqrt((x_ref_left2-x_res_left2)*(x_ref_left2-x_res_left2)+(y_ref_left2-y_res_left2)*(y_ref_left2-y_res_left2));
+			alpha_left2 = - (phi_res_left2) + atan2(y_ref_left2-y_res_left2,x_ref_left2-x_res_left2);
+			x_ref_right1 = x_o_ref + cos(phi_o_ref)*(+L_o+R_r/2)-sin(phi_o_ref)*(0.0);
+			y_ref_right1 = y_o_ref + sin(phi_o_ref)*(+L_o+R_r)+cos(phi_o_ref)*(0.0);
+			ro_right1 = sqrt((x_ref_right1-x_res_right1)*(x_ref_right1-x_res_right1)+(y_ref_right1-y_res_right1)*(y_ref_right1-y_res_right1));
+			alpha_right1 = - (phi_res_right1) + atan2(y_ref_right1-y_res_right1,x_ref_right1-x_res_right1);
+
+			v_cmd_left1 = K_ro*ro_left1;
+			w_cmd_left1 = K_alpha*alpha_left1;
+			v_cmd_left2 = K_ro*ro_left2;
+			w_cmd_left2 = K_alpha*alpha_left2;
+			v_cmd_right1 = K_ro*ro_right1;
+			w_cmd_right1 = K_alpha*alpha_right1;
 		}
-		else if (behaviour==AVOIDOBSTACLE && t-t_avoid>=2.5 && t-t_avoid<=5){
+		else if (behaviour==GOTOGOAL2){
 			control_mode_left1 = VELOCITY;
 			control_mode_left2 = VELOCITY;
 			control_mode_right1 = VELOCITY;
-			v_cmd_left1 = -0.1+0.1*(t-t_avoid-2.5)/2.5;
-			v_cmd_left2 = -0.1+0.1*(t-t_avoid-2.5)/2.5;
-			v_cmd_right1 = -0.1+0.1*(t-t_avoid-2.5)/2.5;
-		}
-		else if (behaviour==AVOIDOBSTACLE && t-t_avoid>5.0){			
-			control_mode_left1 = FORCE;
-			control_mode_left2 = FORCE;
-			control_mode_right1 = VELOCITY;
-			f_cmd_left1 = 2.5;
-			f_cmd_left2 = 2.5;
-			v_cmd_right1 = 0.05;
-			w_cmd_left1 = 0.05;
-			w_cmd_left2 = 0.05;
-			w_cmd_right1 = 0.05;
+
+			v_cmd_left1 = 0.0;
+			w_cmd_left1 = 0.0;
+			v_cmd_left2 = 0.0;
+			w_cmd_left2 = 0.0;
+			v_cmd_right1 = 0.0;
+			w_cmd_right1 = 0.0;
 		}
 		
 		
@@ -557,7 +616,7 @@ int main(void)
 			dw_ref_left1 = K_pw*(w_cmd_left1-dphi_res_left1);
 		}
 		else if (control_mode_left1 == FORCE){
-			dv_ref_left1 = K_f*(f_cmd_left1-f_res_left1);
+			dv_ref_left1 = K_f*(f_cmd_left1-f_dis_left1);
 			dw_ref_left1 = K_pw*(w_cmd_left1-dphi_res_left1);
 		}
 		else{
@@ -811,26 +870,39 @@ int main(void)
 				+ f_dis_right1*(-sin(phi_o)*(x_o-x_c_right1)+cos(phi_o)*(y_o-y_c_right1)) 
 				)/J_o - D_f_rotation*dphi_o;
 
-		if (dl_tan_left1 > 0 ) {
-			ddx_o += (f_tan_left1*(-sin(phi_o)))/M_o;
-			ddy_o = (f_tan_left1+f_tan_left2 + f_tan_right1)*(cos(phi_o)))/M_o - D_f*dy_o;
-			ddphi_o = (f_dis_left1*(-sin(phi_o)*(x_o-x_c_left1)+cos(phi_o)*(y_o-y_c_left1)) + fabs((f_tan_left1)*(-cos(phi_o)*(x_o-x_c_left1)+sin(phi_o)*(y_o-y_c_left1)))
-				+ f_dis_left2*(-sin(phi_o)*(x_o-x_c_left2)+cos(phi_o)*(y_o-y_c_left2)) + fabs((f_tan_left2)*(-cos(phi_o)*(x_o-x_c_left2)+sin(phi_o)*(y_o-y_c_left2)))
-				+ f_dis_right1*(-sin(phi_o)*(x_o-x_c_right1)+cos(phi_o)*(y_o-y_c_right1)) - fabs((f_tan_right1)*(-cos(phi_o)*(x_o-x_c_right1)+sin(phi_o)*(y_o-y_c_right1)))
-				)/J_o - D_f_rotation*dphi_o;
+		if (dl_tan_left1 > 0.01) {
+			ddx_o += f_tan_left1*(-sin(phi_o))/M_o;
+			ddy_o +=  f_tan_left1*(cos(phi_o))/M_o;
+			ddphi_o += -fabs((f_tan_left1)*(-cos(phi_o)*(x_o-x_c_left1)+sin(phi_o)*(y_o-y_c_left1)))/J_o;
 		}
-		else if (dl_tan_left1 < 0 ){
-			ddx_o = (f_dis_left1*cos(phi_o)+f_dis_left2*cos(phi_o)+f_dis_right1*cos(phi_o) - (f_tan_left1+f_tan_left2 + f_tan_right1)*(-sin(phi_o)))/M_o - D_f*dx_o;
-			ddy_o = (f_dis_left1*sin(phi_o)+f_dis_left2*sin(phi_o)+f_dis_right1*sin(phi_o) - (f_tan_left1+f_tan_left2 + f_tan_right1)*(cos(phi_o)))/M_o - D_f*dy_o;
-			ddphi_o = (f_dis_left1*(-sin(phi_o)*(x_o-x_c_left1)+cos(phi_o)*(y_o-y_c_left1)) - fabs((f_tan_left1)*(-cos(phi_o)*(x_o-x_c_left1)+sin(phi_o)*(y_o-y_c_left1)))
-				+ f_dis_left2*(-sin(phi_o)*(x_o-x_c_left2)+cos(phi_o)*(y_o-y_c_left2)) - fabs((f_tan_left2)*(-cos(phi_o)*(x_o-x_c_left2)+sin(phi_o)*(y_o-y_c_left2)))
-				+ f_dis_right1*(-sin(phi_o)*(x_o-x_c_right1)+cos(phi_o)*(y_o-y_c_right1)) + fabs((f_tan_right1)*(-cos(phi_o)*(x_o-x_c_right1)+sin(phi_o)*(y_o-y_c_right1)))
-				)/J_o - D_f_rotation*dphi_o;
+		else if (dl_tan_left1 < -0.01 ){
+			ddx_o += -f_tan_left1*(-sin(phi_o))/M_o;
+			ddy_o +=  -f_tan_left1*(cos(phi_o))/M_o;
+			ddphi_o += fabs((f_tan_left1)*(-cos(phi_o)*(x_o-x_c_left1)+sin(phi_o)*(y_o-y_c_left1)))/J_o;
 		}
-		else {
+		if (dl_tan_left2 > 0.01 ) {
+			ddx_o += f_tan_left2*(-sin(phi_o))/M_o;
+			ddy_o +=  f_tan_left2*(cos(phi_o))/M_o;
+			ddphi_o += -fabs((f_tan_left2)*(-cos(phi_o)*(x_o-x_c_left2)+sin(phi_o)*(y_o-y_c_left2)))/J_o;
+		}
+		else if (dl_tan_left2 < -0.01 ){
+			ddx_o += -f_tan_left2*(-sin(phi_o))/M_o;
+			ddy_o +=  -f_tan_left2*(cos(phi_o))/M_o;
+			ddphi_o += fabs((f_tan_left2)*(-cos(phi_o)*(x_o-x_c_left2)+sin(phi_o)*(y_o-y_c_left2)))/J_o;
+		}
+		if (dl_tan_right1 > 0.01 ) {
+			ddx_o += f_tan_right1*(-sin(phi_o))/M_o;
+			ddy_o +=  f_tan_right1*(cos(phi_o))/M_o;
+			ddphi_o += fabs((f_tan_right1)*(-cos(phi_o)*(x_o-x_c_right1)+sin(phi_o)*(y_o-y_c_right1)))/J_o;
+		}
+		else if (dl_tan_right1 < -0.01 ){
+			ddx_o += -f_tan_right1*(-sin(phi_o))/M_o;
+			ddy_o +=  -f_tan_right1*(cos(phi_o))/M_o;
+			ddphi_o += -fabs((f_tan_right1)*(-cos(phi_o)*(x_o-x_c_right1)+sin(phi_o)*(y_o-y_c_right1)))/J_o;
+		}
 
 
-		if (dl_tan_left1 > 0 ) {
+		/*if (dl_tan_left1 > 0 ) {
 			ddx_o = (f_dis_left1*cos(phi_o)+f_dis_left2*cos(phi_o)+f_dis_right1*cos(phi_o) + (f_tan_left1+f_tan_left2 + f_tan_right1)*(-sin(phi_o)))/M_o - D_f*dx_o;
 			ddy_o = (f_dis_left1*sin(phi_o)+f_dis_left2*sin(phi_o)+f_dis_right1*sin(phi_o) + (f_tan_left1+f_tan_left2 + f_tan_right1)*(cos(phi_o)))/M_o - D_f*dy_o;
 			ddphi_o = (f_dis_left1*(-sin(phi_o)*(x_o-x_c_left1)+cos(phi_o)*(y_o-y_c_left1)) + fabs((f_tan_left1)*(-cos(phi_o)*(x_o-x_c_left1)+sin(phi_o)*(y_o-y_c_left1)))
@@ -847,7 +919,9 @@ int main(void)
 				)/J_o - D_f_rotation*dphi_o;
 		}
 		else {
-		}
+		}*/
+
+
 		//ddx_o = (f_dis_left1*cos(phi_res_left1)+f_dis_left2*cos(phi_res_left2)+f_dis_right1*cos(phi_res_right1))/M_o - D_f*dx_o;
 		//ddy_o = (f_dis_left1*sin(phi_res_left1)+f_dis_left2*sin(phi_res_left2)+f_dis_right1*sin(phi_res_right1))/M_o - D_f*dy_o;
 		//ddphi_o = (f_dis_left1*(-sin(phi_res_left1)*(x_o-x_c_left1)+cos(phi_res_left1)*(y_o-y_c_left1)) 
@@ -892,6 +966,7 @@ int main(void)
 		}
 		l_right1_prev = l_right1;
 
+
 		l_tan_left1 = cos(phi_o)*(y_c_left1-y_o-sin(phi_o)*(-L_o))-sin(phi_o)*(x_c_left2-x_o-cos(phi_o)*(-L_o));
 		if (firstRound==1){
 			dl_tan_left1 = 0.0;
@@ -910,7 +985,7 @@ int main(void)
 		}
 		l_tan_left2_prev = l_tan_left2;
 
-		l_tan_right1 = cos(phi_o)*(y_c_right1-y_o-sin(phi_o)*(-L_o))-sin(phi_o)*(x_c_right1-x_o-cos(phi_o)*(L_o));
+		l_tan_right1 = cos(phi_o)*(y_c_right1-y_o-sin(phi_o)*(L_o))-sin(phi_o)*(x_c_right1-x_o-cos(phi_o)*(L_o));
 		if (firstRound==1){
 			dl_tan_right1 = 0.0;
 		}
@@ -998,7 +1073,7 @@ int main(void)
 		f_res_right1 = integral_f_res_right1 - GROBOT*M_r*R_w*(dtheta_res_right1_l+dtheta_res_right1_r)/2;
 		integral_f_res_right1 += ((tau_rtob_right1_l+tau_rtob_right1_r)/R_w + GROBOT*M_r*R_w*(dtheta_res_right1_l+dtheta_res_right1_r)/2 - integral_f_res_right1)*GROBOT*ST;
 
-		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %i %i %i %i\n", t, x_o, y_o, phi_o, x_res_left1, y_res_left1, phi_res_left1, f_dis_left1, x_res_left2, y_res_left2, phi_res_left2, f_dis_left2, v_res_left1, f_res_left1, f_res_left2, reaction_wall, x_wall, y_wall, x_res_right1, y_res_right1, phi_res_right1, f_dis_right1, f_res_right1, behaviour, control_mode_left1, control_mode_left2, control_mode_right1);
+		fprintf(fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %i\n", t, x_o, y_o, phi_o, x_res_left1, y_res_left1, phi_res_left1, f_dis_left1, x_res_left2, y_res_left2, phi_res_left2, f_dis_left2, v_res_left1, f_res_left1, f_res_left2, reaction_wall, x_res_right1, y_res_right1, phi_res_right1, f_dis_right1, f_res_right1, behaviour);
 		
 		t += ST;
 		firstRound = 0;
